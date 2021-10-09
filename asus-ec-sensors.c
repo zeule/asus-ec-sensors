@@ -309,7 +309,7 @@ static acpi_handle asus_hw_access_mutex(struct device *dev)
 }
 
 /*
- * Switches ASUS EC banks. Returns previous bank number or error code
+ * Switches ASUS EC banks.
  */
 static int asus_ec_bank_switch(u8 bank, u8 *old)
 {
@@ -328,8 +328,6 @@ static int asus_ec_block_read(const struct device *dev,
 	u8 bank, reg_bank, prev_bank;
 
 	dev_info(dev, "Reading %d EC registers", ec->nr_registers);
-	//memset(values, 0, len);
-	//return 0;
 
 	bank = 0;
 	status = asus_ec_bank_switch(bank, &prev_bank);
@@ -397,18 +395,16 @@ static int update_ec_sensors(const struct device *dev,
 			     struct ec_sensors_data *ec)
 {
 	int status;
-	acpi_status acpi_st;
 
 	mutex_lock(&ec->lock);
 	/*
 	 * ASUS DSDT does not specify that access to the EC has to be guarded,
 	 * but firmware does access it via ACPI
 	 */
-	acpi_st = acpi_acquire_mutex(ec->aml_mutex, NULL, ACPI_DELAY_MSEC_LOCK);
-	if (acpi_st) {
-		dev_err(dev, "Failed to accure AML mutex");
-		status = acpi_st;
-		goto cleanup2;
+	if (ACPI_FAILURE(acpi_acquire_mutex(ec->aml_mutex, NULL, ACPI_DELAY_MSEC_LOCK))) {
+		dev_err(dev, "Failed to acquire AML mutex");
+		status = -EIO;
+		goto cleanup;
 	}
 
 	status = asus_ec_block_read(dev, ec);
@@ -416,11 +412,10 @@ static int update_ec_sensors(const struct device *dev,
 	if (!status) {
 		update_sensor_values(ec, ec->read_buffer);
 	}
-	acpi_st = acpi_release_mutex(ec->aml_mutex, NULL);
-	if (acpi_st) {
+	if (ACPI_FAILURE(acpi_release_mutex(ec->aml_mutex, NULL))) {
 		dev_err(dev, "Failed to release AML mutex");
 	}
-cleanup2:
+cleanup:
 	mutex_unlock(&ec->lock);
 	return status;
 }
@@ -441,11 +436,8 @@ static int get_cached_value_or_update(const struct device *dev,
 				      int sensor_index,
 				      struct ec_sensors_data *state, u32 *value)
 {
-	int ret;
 	if (time_after(jiffies, state->last_updated + HZ)) {
-		ret = update_ec_sensors(dev, state);
-
-		if (ret) {
+		if (update_ec_sensors(dev, state)) {
 			dev_err(dev, "update_ec_sensors() failure\n");
 			return -EIO;
 		}
@@ -663,7 +655,7 @@ static void cleanup_device(void)
 static int __init asus_ec_init(void)
 {
 	struct asus_ec_sensors *state;
-	int status;
+	int status = 0;
 
 	asus_ec_sensors_platform_device =
 		platform_create_bundle(&asus_ec_sensors_platform_driver,
@@ -675,12 +667,14 @@ static int __init asus_ec_init(void)
 	state = devm_kzalloc(&asus_ec_sensors_platform_device->dev,
 			     sizeof(struct asus_ec_sensors), GFP_KERNEL);
 
-	if (!state)
-		return -ENOMEM;
+	if (!state) {
+		status = -ENOMEM;
+		goto cleanup;
+	}
 
 	platform_set_drvdata(asus_ec_sensors_platform_device, state);
-
 	status = configure_sensor_setup(asus_ec_sensors_platform_device);
+cleanup:
 	if (status) {
 		cleanup_device();
 	}
