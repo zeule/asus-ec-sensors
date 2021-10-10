@@ -192,7 +192,6 @@ struct ec_sensors_data {
 	u8 banks[ASUS_EC_MAX_BANK];
 	u8* read_buffer;
 	unsigned long last_updated; /* in jiffies */
-	struct mutex lock;
 	acpi_handle aml_mutex;
 	u8 nr_sensors; /* number of board EC sensors */
 	/* number of EC registers to read (sensor might span more than 1 register) */
@@ -400,7 +399,6 @@ static int update_ec_sensors(const struct device *dev,
 {
 	int status;
 
-	mutex_lock(&ec->lock);
 	/*
 	 * ASUS DSDT does not specify that access to the EC has to be guarded,
 	 * but firmware does access it via ACPI
@@ -420,7 +418,6 @@ static int update_ec_sensors(const struct device *dev,
 		dev_err(dev, "Failed to release AML mutex");
 	}
 cleanup:
-	mutex_unlock(&ec->lock);
 	return status;
 }
 
@@ -567,7 +564,6 @@ static int __init configure_sensor_setup(struct platform_device *pdev)
 		return -ENODEV;
 	}
 
-	mutex_init(&ec_data->lock);
 	ec_data->nr_sensors = board_sensors_count(asus_ec_sensors->board);
 	ec_data->sensors = devm_kcalloc(dev, ec_data->nr_sensors,
 					sizeof(struct ec_sensor), GFP_KERNEL);
