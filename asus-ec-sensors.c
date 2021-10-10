@@ -23,7 +23,7 @@
 #define ASUS_EC_BANK_REGISTER 0xff
 #define MAX_SENSOR_LABEL_LENGTH 0x10
 /*
- * Abitrary set max allowed bank number. Required for sorting banks and
+ * Arbitrary set max allowed bank number. Required for sorting banks and
  * currently is overkill with just 2 banks used at max, but for the sake
  * of alignment let's set it to a higher value
  */
