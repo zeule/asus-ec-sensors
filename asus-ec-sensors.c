@@ -403,7 +403,7 @@ static int update_ec_sensors(const struct device *dev,
 	 */
 	if (ACPI_FAILURE(acpi_acquire_mutex(ec->aml_mutex, NULL, ACPI_DELAY_MSEC_LOCK))) {
 		dev_err(dev, "Failed to acquire AML mutex");
-		status = -EIO;
+		status = -EBUSY;
 		goto cleanup;
 	}
 
