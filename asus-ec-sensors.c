@@ -367,26 +367,28 @@ static int asus_ec_block_read(const struct device *dev,
 	return status;
 }
 
+static inline u32 get_sensor_value(const struct ec_sensor_info *si, u8 *data)
+{
+	switch (si->addr.components.size) {
+	case 1:
+		return *data;
+	case 2:
+		return get_unaligned_be16(data);
+	case 4:
+		return get_unaligned_be32(data);
+	default:
+		return 0;
+	}
+}
+
 static void update_sensor_values(struct ec_sensors_data *ec, u8 *data)
 {
 	const struct ec_sensor_info *si;
 	struct ec_sensor *s;
-	int sidx;
 
-	for (sidx = 0; sidx < ec->nr_sensors; ++sidx) {
-		s = &ec->sensors[sidx];
+	for (s = ec->sensors; s != ec->sensors + ec->nr_sensors; s++) {
 		si = &known_ec_sensors[s->info_index];
-		switch (si->addr.components.size) {
-		case 1:
-			s->cached_value = *data;
-			break;
-		case 2:
-			s->cached_value = get_unaligned_be16(data);
-			break;
-		case 4:
-			s->cached_value = get_unaligned_be32(data);
-			break;
-		}
+		s->cached_value = get_sensor_value(si, data);
 		data += si->addr.components.size;
 	}
 }
@@ -571,9 +573,7 @@ static int __init configure_sensor_setup(struct platform_device *pdev)
 	ec_data->read_buffer = devm_kcalloc(dev, ec_data->nr_registers,
 		sizeof(u8), GFP_KERNEL);
 
-	if (IS_ERR_OR_NULL(ec_data->registers) ||
-		IS_ERR_OR_NULL(ec_data->read_buffer)
-	) {
+	if (!ec_data->registers || !ec_data->read_buffer) {
 		return -ENOMEM;
 	}
 
