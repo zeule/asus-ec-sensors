@@ -11,7 +11,6 @@
 #include <linux/dev_printk.h>
 #include <linux/dmi.h>
 #include <linux/hwmon.h>
-#include <linux/hwmon-sysfs.h>
 #include <linux/init.h>
 #include <linux/jiffies.h>
 #include <linux/kernel.h>
@@ -70,7 +69,7 @@ enum board {
 		}                                                              \
 	}
 
-static const struct dmi_system_id asus_ec_dmi_table[BOARD_MAX + 1] __initdata = {
+static const struct dmi_system_id asus_ec_dmi_table[BOARD_MAX + 1] __initconst = {
 	[BOARD_PW_X570_A] = DMI_EXACT_MATCH_ASUS_BOARD_NAME("Pro WS X570-ACE"),
 	[BOARD_R_C8H] = DMI_EXACT_MATCH_ASUS_BOARD_NAME("ROG CROSSHAIR VIII HERO"),
 	[BOARD_R_C8DH] = DMI_EXACT_MATCH_ASUS_BOARD_NAME("ROG CROSSHAIR VIII DARK HERO"),
@@ -103,110 +102,90 @@ struct ec_sensor_info {
 	}
 
 enum known_ec_sensor {
-	SENSOR_TEMP_CHIPSET,
-	SENSOR_TEMP_CPU,
-	SENSOR_TEMP_MB,
-	SENSOR_TEMP_T_SENSOR,
-	SENSOR_TEMP_VRM,
-	SENSOR_FAN_CPU_OPT,
-	SENSOR_FAN_CHIPSET,
-	SENSOR_FAN_VRM_HS,
-	SENSOR_FAN_WATER_FLOW,
-	SENSOR_CURR_CPU,
-	SENSOR_TEMP_WATER_IN,
-	SENSOR_TEMP_WATER_OUT,
-	SENSOR_MAX
+	SENSOR_TEMP_CHIPSET 	=   0x1, /* chipset temperature [℃] */
+	SENSOR_TEMP_CPU		=   0x2, /* CPU temperature [℃] */
+	SENSOR_TEMP_MB		=   0x4, /* motherboard temperature [℃] */
+	SENSOR_TEMP_T_SENSOR	=   0x8, /* "T_Sensor" temperature sensor reading [℃] */
+	SENSOR_TEMP_VRM		=  0x10, /* VRM temperature [℃] */
+	SENSOR_FAN_CPU_OPT	=  0x20, /* CPU_Opt fan [RPM] */
+	SENSOR_FAN_VRM_HS	=  0x40, /* VRM heat sink fan [RPM] */
+	SENSOR_FAN_CHIPSET	=  0x80, /* chipset fan [RPM] */
+	SENSOR_FAN_WATER_FLOW	= 0x100, /* water flow sensor reading [RPM] */
+	SENSOR_CURR_CPU		= 0x200, /* CPU current [A] */
+	SENSOR_TEMP_WATER_IN	= 0x400, /* "Water_In" temperature sensor reading [℃] */
+	SENSOR_TEMP_WATER_OUT	= 0x800, /* "Water_Out" temperature sensor reading [℃] */
+	SENSOR_MAX = SENSOR_TEMP_WATER_OUT
 };
 
 /*
  * All the known sensors for ASUS EC controllers
  */
 static const struct ec_sensor_info known_ec_sensors[] = {
-	[SENSOR_TEMP_CHIPSET] = EC_SENSOR("Chipset", hwmon_temp, 1, 0x00, 0x3a),
-	[SENSOR_TEMP_CPU] = EC_SENSOR("CPU", hwmon_temp, 1, 0x00, 0x3b),
-	[SENSOR_TEMP_MB] = EC_SENSOR("Motherboard", hwmon_temp, 1, 0x00, 0x3c),
-	[SENSOR_TEMP_T_SENSOR] =
-		EC_SENSOR("T_Sensor", hwmon_temp, 1, 0x00, 0x3d),
-	[SENSOR_TEMP_VRM] = EC_SENSOR("VRM", hwmon_temp, 1, 0x00, 0x3e),
-	[SENSOR_FAN_CPU_OPT] = EC_SENSOR("CPU_Opt", hwmon_fan, 2, 0x00, 0xb0),
-	[SENSOR_FAN_VRM_HS] = EC_SENSOR("VRM HS", hwmon_fan, 2, 0x00, 0xb2),
-	[SENSOR_FAN_CHIPSET] = EC_SENSOR("Chipset", hwmon_fan, 2, 0x00, 0xb4),
-	[SENSOR_FAN_WATER_FLOW] =
-		EC_SENSOR("Water_Flow", hwmon_fan, 2, 0x00, 0xbc),
-	[SENSOR_CURR_CPU] = EC_SENSOR("CPU", hwmon_curr, 1, 0x00, 0xf4),
-	[SENSOR_TEMP_WATER_IN] =
-		EC_SENSOR("Water_In", hwmon_temp, 1, 0x01, 0x00),
-	[SENSOR_TEMP_WATER_OUT] =
-		EC_SENSOR("Water_Out", hwmon_temp, 1, 0x01, 0x01),
+	EC_SENSOR("Chipset", hwmon_temp, 1, 0x00, 0x3a), /* SENSOR_TEMP_CHIPSET */
+	EC_SENSOR("CPU", hwmon_temp, 1, 0x00, 0x3b), /* SENSOR_TEMP_CPU */
+	EC_SENSOR("Motherboard", hwmon_temp, 1, 0x00, 0x3c), /* SENSOR_TEMP_MB */
+	EC_SENSOR("T_Sensor", hwmon_temp, 1, 0x00, 0x3d), /* SENSOR_TEMP_T_SENSOR */
+	EC_SENSOR("VRM", hwmon_temp, 1, 0x00, 0x3e), /* SENSOR_TEMP_VRM */
+	EC_SENSOR("CPU_Opt", hwmon_fan, 2, 0x00, 0xb0), /* SENSOR_FAN_CPU_OPT */
+	EC_SENSOR("VRM HS", hwmon_fan, 2, 0x00, 0xb2), /* SENSOR_FAN_VRM_HS */
+	EC_SENSOR("Chipset", hwmon_fan, 2, 0x00, 0xb4), /* SENSOR_FAN_CHIPSET */
+	EC_SENSOR("Water_Flow", hwmon_fan, 2, 0x00, 0xbc), /* SENSOR_FAN_WATER_FLOW */
+	EC_SENSOR("CPU", hwmon_curr, 1, 0x00, 0xf4), /* SENSOR_CURR_CPU */
+	EC_SENSOR("Water_In", hwmon_temp, 1, 0x01, 0x00), /* SENSOR_TEMP_WATER_IN */
+	EC_SENSOR("Water_Out", hwmon_temp, 1, 0x01, 0x01), /* SENSOR_TEMP_WATER_OUT */
 };
 
-static const enum known_ec_sensor known_board_sensors[BOARD_MAX][SENSOR_MAX + 1] = {
-	[BOARD_PW_X570_A] = {
-		SENSOR_TEMP_CHIPSET, SENSOR_TEMP_CPU, SENSOR_TEMP_MB, SENSOR_TEMP_VRM,
-		SENSOR_FAN_CHIPSET,
+static const enum known_ec_sensor known_board_sensors[BOARD_MAX] __initconst = {
+	[BOARD_PW_X570_A] =
+		SENSOR_TEMP_CHIPSET | SENSOR_TEMP_CPU | SENSOR_TEMP_MB | SENSOR_TEMP_VRM |
+		SENSOR_FAN_CHIPSET |
 		SENSOR_CURR_CPU,
-		SENSOR_MAX
-	},
-	[BOARD_R_C8H] = {
-		SENSOR_TEMP_CHIPSET, SENSOR_TEMP_CPU, SENSOR_TEMP_MB,
-		SENSOR_TEMP_T_SENSOR, SENSOR_TEMP_VRM,
-		SENSOR_TEMP_WATER_IN, SENSOR_TEMP_WATER_OUT,
-		SENSOR_FAN_CPU_OPT, SENSOR_FAN_CHIPSET, SENSOR_FAN_WATER_FLOW,
+	[BOARD_R_C8H] =
+		SENSOR_TEMP_CHIPSET | SENSOR_TEMP_CPU | SENSOR_TEMP_MB |
+		SENSOR_TEMP_T_SENSOR | SENSOR_TEMP_VRM |
+		SENSOR_TEMP_WATER_IN | SENSOR_TEMP_WATER_OUT |
+		SENSOR_FAN_CPU_OPT | SENSOR_FAN_CHIPSET | SENSOR_FAN_WATER_FLOW |
 		SENSOR_CURR_CPU,
-		SENSOR_MAX
-	},
-	[BOARD_R_C8DH] = { /* Same as Hero but without chipset fan */
-		SENSOR_TEMP_CHIPSET, SENSOR_TEMP_CPU, SENSOR_TEMP_MB,
-		SENSOR_TEMP_T_SENSOR, SENSOR_TEMP_VRM,
-		SENSOR_TEMP_WATER_IN, SENSOR_TEMP_WATER_OUT,
-		SENSOR_FAN_CPU_OPT, SENSOR_FAN_WATER_FLOW,
+	[BOARD_R_C8DH] = /* Same as Hero but without chipset fan */
+		SENSOR_TEMP_CHIPSET | SENSOR_TEMP_CPU | SENSOR_TEMP_MB |
+		SENSOR_TEMP_T_SENSOR | SENSOR_TEMP_VRM |
+		SENSOR_TEMP_WATER_IN | SENSOR_TEMP_WATER_OUT |
+		SENSOR_FAN_CPU_OPT | SENSOR_FAN_WATER_FLOW |
 		SENSOR_CURR_CPU,
-		SENSOR_MAX
-	},
-	[BOARD_R_C8F] = { /* Same as Hero but without water */
-		SENSOR_TEMP_CHIPSET, SENSOR_TEMP_CPU, SENSOR_TEMP_MB,
-		SENSOR_TEMP_T_SENSOR, SENSOR_TEMP_VRM,
-		SENSOR_FAN_CPU_OPT, SENSOR_FAN_CHIPSET,
+	[BOARD_R_C8F] = /* Same as Hero but without water */
+		SENSOR_TEMP_CHIPSET | SENSOR_TEMP_CPU | SENSOR_TEMP_MB |
+		SENSOR_TEMP_T_SENSOR | SENSOR_TEMP_VRM |
+		SENSOR_FAN_CPU_OPT | SENSOR_FAN_CHIPSET |
 		SENSOR_CURR_CPU,
-		SENSOR_MAX
-	},
-	[BOARD_R_C8I] = {
-		SENSOR_TEMP_CHIPSET, SENSOR_TEMP_CPU, SENSOR_TEMP_MB,
-		SENSOR_TEMP_T_SENSOR, SENSOR_TEMP_VRM,
-		SENSOR_FAN_CHIPSET,
+	[BOARD_R_C8I] =
+		SENSOR_TEMP_CHIPSET | SENSOR_TEMP_CPU | SENSOR_TEMP_MB |
+		SENSOR_TEMP_T_SENSOR | SENSOR_TEMP_VRM |
+		SENSOR_FAN_CHIPSET |
 		SENSOR_CURR_CPU,
-		SENSOR_MAX
-	},
-	[BOARD_RS_B550_E_G] = {
-		SENSOR_TEMP_CHIPSET, SENSOR_TEMP_CPU, SENSOR_TEMP_MB,
-		SENSOR_TEMP_T_SENSOR, SENSOR_TEMP_VRM,
-		SENSOR_FAN_CPU_OPT,
+	[BOARD_RS_B550_E_G] =
+		SENSOR_TEMP_CHIPSET | SENSOR_TEMP_CPU | SENSOR_TEMP_MB |
+		SENSOR_TEMP_T_SENSOR | SENSOR_TEMP_VRM |
+		SENSOR_FAN_CPU_OPT |
 		SENSOR_CURR_CPU,
-		SENSOR_MAX
-	},
-	[BOARD_RS_B550_I_G] = {
-		SENSOR_TEMP_CHIPSET, SENSOR_TEMP_CPU, SENSOR_TEMP_MB,
-		SENSOR_TEMP_T_SENSOR, SENSOR_TEMP_VRM,
-		SENSOR_FAN_VRM_HS,
+	[BOARD_RS_B550_I_G] =
+		SENSOR_TEMP_CHIPSET | SENSOR_TEMP_CPU | SENSOR_TEMP_MB |
+		SENSOR_TEMP_T_SENSOR | SENSOR_TEMP_VRM |
+		SENSOR_FAN_VRM_HS |
 		SENSOR_CURR_CPU,
-		SENSOR_MAX
-	},
-	[BOARD_RS_X570_E_G] = {
-		SENSOR_TEMP_CHIPSET, SENSOR_TEMP_CPU, SENSOR_TEMP_MB,
-		SENSOR_TEMP_T_SENSOR, SENSOR_TEMP_VRM,
-		SENSOR_FAN_CHIPSET,
-		SENSOR_CURR_CPU,
-		SENSOR_MAX
-	},
+	[BOARD_RS_X570_E_G] =
+		SENSOR_TEMP_CHIPSET | SENSOR_TEMP_CPU | SENSOR_TEMP_MB |
+		SENSOR_TEMP_T_SENSOR | SENSOR_TEMP_VRM |
+		SENSOR_FAN_CHIPSET |
+		SENSOR_CURR_CPU
 };
 
 struct ec_sensor {
-	enum known_ec_sensor info_index;
+	unsigned info_index;
 	u32 cached_value;
 };
 
 struct ec_sensors_data {
-	struct ec_sensor sensors[SENSOR_MAX];
+	struct ec_sensor* sensors;
 	/* EC registers to read from */
 	u16* registers;
 	/* sorted list of unique register banks */
@@ -263,24 +242,30 @@ static int bank_compare(const void* a, const void* b)
 	return *((const s8*)a) - *((const s8*)b);
 }
 
+static inline int board_sensors_count(enum board board)
+{
+	return __builtin_popcount(known_board_sensors[board]);
+}
+
 static void __init setup_sensor_data(struct ec_sensors_data *ec, board_t board)
 {
-	const enum known_ec_sensor *bsi = known_board_sensors[board];
+	const int board_sensors = known_board_sensors[board];
 	struct ec_sensor *s = ec->sensors;
 	bool bank_found;
 	int i, j;
 	u8 bank;
 
 	ec->nr_banks = 0;
-	ec->nr_sensors = ec->nr_registers = 0;
-	for (i = 0; i < SENSOR_MAX && bsi[i] != SENSOR_MAX; i++) {
-		s[i].info_index = bsi[i];
-		s[i].cached_value = 0;
-		ec->nr_sensors++;
+	ec->nr_registers = 0;
+
+	for (i = 1; i <= SENSOR_MAX; i <<= 1) {
+		if ((i & board_sensors) == 0) continue;
+		s->info_index = __builtin_ctz(i);
+		s->cached_value = 0;
 		ec->nr_registers +=
-			known_ec_sensors[bsi[i]].addr.components.size;
+			known_ec_sensors[s->info_index].addr.components.size;
 		bank_found = false;
-		bank = known_ec_sensors[bsi[i]].addr.components.bank;
+		bank = known_ec_sensors[s->info_index].addr.components.bank;
 		for (j = 0; j < ec->nr_banks; j++) {
 			if (ec->banks[j] == bank) {
 				bank_found = true;
@@ -290,6 +275,7 @@ static void __init setup_sensor_data(struct ec_sensors_data *ec, board_t board)
 		if (!bank_found) {
 			ec->banks[ec->nr_banks++] = bank;
 		}
+		s++;
 	}
 	sort(ec->banks, ec->nr_banks, 1, &bank_compare, NULL);
 }
@@ -344,8 +330,6 @@ static int asus_ec_block_read(const struct device *dev,
 {
 	int ireg, ibank, status;
 	u8 bank, reg_bank, prev_bank;
-
-	dev_info(dev, "Reading %d EC registers", ec->nr_registers);
 
 	bank = 0;
 	status = asus_ec_bank_switch(bank, &prev_bank);
@@ -584,6 +568,9 @@ static int __init configure_sensor_setup(struct platform_device *pdev)
 	}
 
 	mutex_init(&ec_data->lock);
+	ec_data->nr_sensors = board_sensors_count(asus_ec_sensors->board);
+	ec_data->sensors = devm_kcalloc(dev, ec_data->nr_sensors,
+					sizeof(struct ec_sensor), GFP_KERNEL);
 
 	setup_sensor_data(ec_data, asus_ec_sensors->board);
 	ec_data->registers = devm_kcalloc(dev, ec_data->nr_registers,
