@@ -55,18 +55,20 @@ no idea is there any, you can try the [hwinfo](https://www.hwinfo.com/) software
 show the EC node and known sensors for it. When you have the data (or decided to probe the default set),
 the following changes to the source code need to be made:
 
-1. Add your board name to the `asus_ec_dmi_table` array and a new enum value to the `board` enum. You can find
-the board name in `/sys/class/dmi/id/board_name` or using `dmidecode`.
+1. Add your board vendor and name to the `asus_ec_dmi_table` array and a new enum value to the `board` enum.
+You can find the board vendor and the board name in `/sys/class/dmi/id/board_vendor` and
+`/sys/class/dmi/id/board_name` or using `dmidecode`.
 
-2. Add new entry to the `known_board_sensors` array where list sensors for the board. 
+2. Add new entry to the `known_boards` array where list sensors for the board and the path for the ACPI mutex
+which is used by the firmware to lock access to the EC. You can find this path in the `BREC` function, look for
+`Acquire()` call near the top of the function.
+
+Example: `If ((Acquire (ASMX, 0xFFFF) == Zero))`. The mutex name is `ASMX`, and since the `BREC` method is inside
+the `AMW0` object, the mutex path is `\AMW0.ASMX`.
 
 3. If you discover new sensors, modify the `known_ec_sensor` enum and add it to the `known_ec_sensors` array.
 For each sensor you need to provide its size in bytes (for example, RPM counters span two single-byte registers),
 its bank index and register index within the bank. If the sensor spans two or more registers, provide the 
 first one (the smaller number).
-
-4. If the ACPI mutex name you discovered differs from the one in the code (`\AMW0.ASMX`), you need to change the 
-`asus_hw_access_mutex()` function (how to get the board id in `asus_hw_access_mutex()` you can look up in the
-`get_sensor_data()` function).
 
 Compile and it should work.
