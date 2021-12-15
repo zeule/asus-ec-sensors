@@ -242,7 +242,7 @@ static int bank_compare(const void* a, const void* b)
 
 static inline int board_sensors_count(enum board board)
 {
-	return __builtin_popcount(known_board_sensors[board]);
+	return hweight_long(known_board_sensors[board]);
 }
 
 static void __init setup_sensor_data(struct ec_sensors_data *ec, board_t board)
