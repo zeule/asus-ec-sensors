@@ -35,26 +35,26 @@
 
 #include <asm/unaligned.h>
 
-static char *mutex_path_override = NULL;
+static char *mutex_path_override;
 
-/** Writing to this EC register switches EC bank */
-#define ASUS_EC_BANK_REGISTER 0xff
-#define SENSOR_LABEL_LEN 16
+/* Writing to this EC register switches EC bank */
+#define ASUS_EC_BANK_REGISTER	0xff
+#define SENSOR_LABEL_LEN	16
 
-/**
+/*
  * Arbitrary set max. allowed bank number. Required for sorting banks and
  * currently is overkill with just 2 banks used at max, but for the sake
  * of alignment let's set it to a higher value.
  */
-#define ASUS_EC_MAX_BANK 3
+#define ASUS_EC_MAX_BANK	3
 
-#define ACPI_LOCK_DELAY_MS 500
+#define ACPI_LOCK_DELAY_MS	500
 
 /* ACPI mutex for locking access to the EC for the firmware */
-#define ASUS_HW_ACCESS_MUTEX_ASMX "\\AMW0.ASMX"
+#define ASUS_HW_ACCESS_MUTEX_ASMX	"\\AMW0.ASMX"
 
 /* There are two variants of the vendor spelling */
-#define VENDOR_ASUS_UPPER_CASE "ASUSTeK COMPUTER INC."
+#define VENDOR_ASUS_UPPER_CASE	"ASUSTeK COMPUTER INC."
 
 typedef union {
 	u32 value;
@@ -67,8 +67,8 @@ typedef union {
 } sensor_address;
 
 #define MAKE_SENSOR_ADDRESS(size, bank, index) {                               \
-	.value = (size << 16) + (bank << 8) + index                            \
-}
+		.value = (size << 16) + (bank << 8) + index                    \
+	}
 
 static u32 hwmon_attributes[hwmon_max] = {
 	[hwmon_chip] = HWMON_C_REGISTER_TZ,
@@ -85,36 +85,35 @@ struct ec_sensor_info {
 };
 
 #define EC_SENSOR(sensor_label, sensor_type, size, bank, index) {              \
-	.label = sensor_label, .type = sensor_type,                            \
-	.addr = MAKE_SENSOR_ADDRESS(size, bank, index),                        \
-}
+		.label = sensor_label, .type = sensor_type,                    \
+		.addr = MAKE_SENSOR_ADDRESS(size, bank, index),                \
+	}
 
 enum ec_sensors {
-	/** chipset temperature [℃] */
+	/* chipset temperature [℃] */
 	ec_sensor_temp_chipset,
-	/** CPU temperature [℃] */
+	/* CPU temperature [℃] */
 	ec_sensor_temp_cpu,
-	/** motherboard temperature [℃] */
+	/* motherboard temperature [℃] */
 	ec_sensor_temp_mb,
-	/** "T_Sensor" temperature sensor reading [℃] */
+	/* "T_Sensor" temperature sensor reading [℃] */
 	ec_sensor_temp_t_sensor,
-	/** VRM temperature [℃] */
+	/* VRM temperature [℃] */
 	ec_sensor_temp_vrm,
-	/** CPU_Opt fan [RPM] */
+	/* CPU_Opt fan [RPM] */
 	ec_sensor_fan_cpu_opt,
-	/** VRM heat sink fan [RPM] */
+	/* VRM heat sink fan [RPM] */
 	ec_sensor_fan_vrm_hs,
-	/** Chipset fan [RPM] */
+	/* Chipset fan [RPM] */
 	ec_sensor_fan_chipset,
-	/** Water flow sensor reading [RPM] */
+	/* Water flow sensor reading [RPM] */
 	ec_sensor_fan_water_flow,
-	/** CPU current [A] */
+	/* CPU current [A] */
 	ec_sensor_curr_cpu,
-	/** "Water_In" temperature sensor reading [℃] */
+	/* "Water_In" temperature sensor reading [℃] */
 	ec_sensor_temp_water_in,
-	/** "Water_Out" temperature sensor reading [℃] */
+	/* "Water_Out" temperature sensor reading [℃] */
 	ec_sensor_temp_water_out,
-	ec_sensor_end
 };
 
 #define SENSOR_TEMP_CHIPSET BIT(ec_sensor_temp_chipset)
@@ -130,9 +129,7 @@ enum ec_sensors {
 #define SENSOR_TEMP_WATER_IN BIT(ec_sensor_temp_water_in)
 #define SENSOR_TEMP_WATER_OUT BIT(ec_sensor_temp_water_out)
 
-/**
- * All the known sensors for ASUS EC controllers
- */
+/* All the known sensors for ASUS EC controllers */
 static const struct ec_sensor_info known_ec_sensors[] = {
 	[ec_sensor_temp_chipset] =
 		EC_SENSOR("Chipset", hwmon_temp, 1, 0x00, 0x3a),
@@ -156,146 +153,60 @@ static const struct ec_sensor_info known_ec_sensors[] = {
 		EC_SENSOR("Water_Out", hwmon_temp, 1, 0x01, 0x01),
 };
 
-struct asus_ec_board_versioned_mutex_path {
-	/** Minimal applicable BIOS version */
-	int version;
-	const char *value;
-};
-
-struct asus_ec_board_info {
-	unsigned long int sensors;
-	struct asus_ec_board_versioned_mutex_path mutex_path[];
-};
-
 /* Shortcuts for common combinations */
-#define SENSOR_SET_TEMP_CHIPSET_CPU_MB                                            \
-	SENSOR_TEMP_CHIPSET | SENSOR_TEMP_CPU | SENSOR_TEMP_MB
-#define SENSOR_SET_TEMP_WATER SENSOR_TEMP_WATER_IN | SENSOR_TEMP_WATER_OUT
-
-static struct asus_ec_board_info board_P_X570_P = {
-	.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_VRM |
-		   SENSOR_FAN_CHIPSET,
-	.mutex_path = {
-	    { 0, ASUS_HW_ACCESS_MUTEX_ASMX },
-	    {}
-	}
-};
-
-static struct asus_ec_board_info board_PW_X570_A = {
-	.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_VRM |
-		   SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU,
-	.mutex_path = {
-	    { 0, ASUS_HW_ACCESS_MUTEX_ASMX },
-	    {}
-	}
-};
-
-static struct asus_ec_board_info board_R_C8H = {
-	.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
-		   SENSOR_TEMP_VRM | SENSOR_SET_TEMP_WATER | SENSOR_FAN_CPU_OPT |
-		   SENSOR_FAN_CHIPSET | SENSOR_FAN_WATER_FLOW | SENSOR_CURR_CPU,
-	.mutex_path = {
-	    { 0, ASUS_HW_ACCESS_MUTEX_ASMX },
-	    {}
-	}
-};
-
-/* Same as Hero but without chipset fan */
-static struct asus_ec_board_info board_R_C8DH = {
-	.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
-		   SENSOR_TEMP_VRM | SENSOR_SET_TEMP_WATER | SENSOR_FAN_CPU_OPT |
-		   SENSOR_FAN_WATER_FLOW | SENSOR_CURR_CPU,
-	.mutex_path = {
-	    { 0, ASUS_HW_ACCESS_MUTEX_ASMX },
-	    {}
-	}
-};
-
-/* Same as Hero but without water */
-static struct asus_ec_board_info board_R_C8F = {
-	.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
-		   SENSOR_TEMP_VRM | SENSOR_FAN_CPU_OPT | SENSOR_FAN_CHIPSET |
-		   SENSOR_CURR_CPU,
-	.mutex_path = {
-	    { 0, ASUS_HW_ACCESS_MUTEX_ASMX },
-	    {}
-	}
-};
-
-static struct asus_ec_board_info board_R_C8I = {
-	.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
-		   SENSOR_TEMP_VRM | SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU,
-	.mutex_path = {
-	    { 0, ASUS_HW_ACCESS_MUTEX_ASMX },
-	    {}
-	}
-};
-
-static struct asus_ec_board_info board_RS_B550_E_G = {
-	.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
-		   SENSOR_TEMP_VRM | SENSOR_FAN_CPU_OPT,
-	.mutex_path = {
-	    { 0, ASUS_HW_ACCESS_MUTEX_ASMX },
-	    {}
-	}
-};
-
-static struct asus_ec_board_info board_RS_B550_I_G = {
-	.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
-		   SENSOR_TEMP_VRM | SENSOR_FAN_VRM_HS | SENSOR_CURR_CPU,
-	.mutex_path = {
-	    { 0, ASUS_HW_ACCESS_MUTEX_ASMX },
-	    {}
-	}
-};
-
-static struct asus_ec_board_info board_RS_X570_E_G = {
-	.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
-		   SENSOR_TEMP_VRM | SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU,
-	.mutex_path = {
-	    { 0, ASUS_HW_ACCESS_MUTEX_ASMX },
-	    {}
-	}
-};
-
-static struct asus_ec_board_info board_RS_X570_I_G = {
-	.sensors = SENSOR_TEMP_T_SENSOR | SENSOR_FAN_VRM_HS |
-		   SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU,
-	.mutex_path = {
-	    { 0, ASUS_HW_ACCESS_MUTEX_ASMX },
-	    {}
-	}
-};
+#define SENSOR_SET_TEMP_CHIPSET_CPU_MB                                         \
+	(SENSOR_TEMP_CHIPSET | SENSOR_TEMP_CPU | SENSOR_TEMP_MB)
+#define SENSOR_SET_TEMP_WATER (SENSOR_TEMP_WATER_IN | SENSOR_TEMP_WATER_OUT)
 
 #define DMI_EXACT_MATCH_BOARD(vendor, name, sensors) {                         \
 	.matches = {                                                           \
 		DMI_EXACT_MATCH(DMI_BOARD_VENDOR, vendor),                     \
 		DMI_EXACT_MATCH(DMI_BOARD_NAME, name),                         \
 	},                                                                     \
-	.driver_data = sensors,                                                \
+	.driver_data = (void *)(sensors), \
 }
 
 static const struct dmi_system_id asus_ec_dmi_table[] __initconst = {
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "PRIME X570-PRO",
-			      &board_P_X570_P),
+		SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_VRM |
+		SENSOR_TEMP_T_SENSOR | SENSOR_FAN_CHIPSET),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "Pro WS X570-ACE",
-			      &board_PW_X570_A),
+		SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_VRM |
+		SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE,
-			      "ROG CROSSHAIR VIII DARK HERO", &board_R_C8DH),
+			      "ROG CROSSHAIR VIII DARK HERO",
+		SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
+		SENSOR_TEMP_VRM | SENSOR_SET_TEMP_WATER |
+		SENSOR_FAN_CPU_OPT | SENSOR_FAN_WATER_FLOW | SENSOR_CURR_CPU),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE,
-			      "ROG CROSSHAIR VIII FORMULA", &board_R_C8F),
+			      "ROG CROSSHAIR VIII FORMULA",
+		SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
+		SENSOR_TEMP_VRM | SENSOR_FAN_CPU_OPT | SENSOR_FAN_CHIPSET |
+		SENSOR_CURR_CPU),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "ROG CROSSHAIR VIII HERO",
-			      &board_R_C8H),
+		SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
+		SENSOR_TEMP_VRM | SENSOR_SET_TEMP_WATER |
+		SENSOR_FAN_CPU_OPT | SENSOR_FAN_CHIPSET |
+		SENSOR_FAN_WATER_FLOW | SENSOR_CURR_CPU),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE,
-			      "ROG CROSSHAIR VIII IMPACT", &board_R_C8I),
+			      "ROG CROSSHAIR VIII IMPACT",
+		SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
+		SENSOR_TEMP_VRM | SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "ROG STRIX B550-E GAMING",
-			      &board_RS_B550_E_G),
+		SENSOR_SET_TEMP_CHIPSET_CPU_MB |
+		SENSOR_TEMP_T_SENSOR |
+		SENSOR_TEMP_VRM | SENSOR_FAN_CPU_OPT),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "ROG STRIX B550-I GAMING",
-			      &board_RS_B550_I_G),
+		SENSOR_SET_TEMP_CHIPSET_CPU_MB |
+		SENSOR_TEMP_T_SENSOR |
+		SENSOR_TEMP_VRM | SENSOR_FAN_VRM_HS | SENSOR_CURR_CPU),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "ROG STRIX X570-E GAMING",
-			      &board_RS_X570_E_G),
+		SENSOR_SET_TEMP_CHIPSET_CPU_MB |
+		SENSOR_TEMP_T_SENSOR |
+		SENSOR_TEMP_VRM | SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "ROG STRIX X570-I GAMING",
-			      &board_RS_X570_I_G),
+		SENSOR_TEMP_T_SENSOR | SENSOR_FAN_VRM_HS |
+		SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU),
 	{}
 };
 
@@ -305,7 +216,7 @@ struct ec_sensor {
 };
 
 struct ec_sensors_data {
-	const struct asus_ec_board_info *board;
+	unsigned long board_sensors;
 	struct ec_sensor *sensors;
 	/** EC registers to read from */
 	u16 *registers;
@@ -359,9 +270,9 @@ static int __init bank_compare(const void *a, const void *b)
 	return *((const s8 *)a) - *((const s8 *)b);
 }
 
-static int __init board_sensors_count(const struct asus_ec_board_info *board)
+static int __init board_sensors_count(unsigned long sensors)
 {
-	return hweight_long(board->sensors);
+	return hweight_long(sensors);
 }
 
 static void __init setup_sensor_data(struct ec_sensors_data *ec)
@@ -374,8 +285,8 @@ static void __init setup_sensor_data(struct ec_sensors_data *ec)
 	ec->nr_banks = 0;
 	ec->nr_registers = 0;
 
-	for_each_set_bit (i, &ec->board->sensors,
-			  BITS_PER_TYPE(ec->board->sensors)) {
+	for_each_set_bit(i, &ec->board_sensors,
+			  BITS_PER_TYPE(ec->board_sensors)) {
 		s->info_index = i;
 		s->cached_value = 0;
 		ec->nr_registers +=
@@ -400,6 +311,7 @@ static void __init fill_ec_registers(struct ec_sensors_data *ec)
 {
 	const struct ec_sensor_info *si;
 	unsigned int i, j, register_idx = 0;
+
 	for (i = 0; i < ec->nr_sensors; ++i) {
 		si = get_sensor_info(ec, i);
 		for (j = 0; j < si->addr.components.size; ++j, ++register_idx) {
@@ -410,54 +322,14 @@ static void __init fill_ec_registers(struct ec_sensors_data *ec)
 	}
 }
 
-static int get_bios_version(int *version)
-{
-	return kstrtoint(dmi_get_system_info(DMI_BIOS_VERSION), 10, version);
-}
-
-static int mutex_versions_count(
-	const struct asus_ec_board_versioned_mutex_path *mutex_info)
-{
-	int res;
-
-	for (res = 0; mutex_info[res].value; res++) {
-	}
-	return res;
-}
-
 static acpi_handle asus_hw_access_mutex(struct device *dev)
 {
-	struct ec_sensors_data *state = dev_get_drvdata(dev);
-	int versions_count = mutex_versions_count(state->board->mutex_path);
-	int bios_version, status, i;
 	const char *mutex_path;
 	acpi_handle res;
+	int status;
 
-	if (mutex_path_override) {
-		mutex_path = mutex_path_override;
-	} else if (versions_count == 1) {
-		/*
-		 * We do not check bios version in this case, maybe it's
-		 * even broken.
-		 */
-		mutex_path = state->board->mutex_path[0].value;
-	} else {
-		status = get_bios_version(&bios_version);
-		if (status) {
-			dev_err(dev, "Could not get BIOS version: error %d",
-				status);
-			return NULL;
-		}
-		/*
-		 * otherwise we choose the choose the first version which is
-		 * less or equal to the BIOS version
-		 */
-		for (i = versions_count - 1; i > 0; i--) {
-			if (state->board->mutex_path[i].version <= bios_version)
-				break;
-		}
-		mutex_path = state->board->mutex_path[i].value;
-	}
+	mutex_path = mutex_path_override ?
+		mutex_path_override : ASUS_HW_ACCESS_MUTEX_ASMX;
 
 	status = acpi_get_handle(NULL, (acpi_string)mutex_path, &res);
 	if (ACPI_FAILURE(status)) {
@@ -469,9 +341,6 @@ static acpi_handle asus_hw_access_mutex(struct device *dev)
 	return res;
 }
 
-/*
- * Switches ASUS EC banks.
- */
 static int asus_ec_bank_switch(u8 bank, u8 *old)
 {
 	int status = 0;
@@ -499,8 +368,8 @@ static int asus_ec_block_read(const struct device *dev,
 
 	if (prev_bank) {
 		/* oops... somebody else is working with the EC too */
-		dev_warn(dev, "Concurrent access to the ACPI EC "
-			      "detected.\nRace condition possible.");
+		dev_warn(dev,
+			"Concurrent access to the ACPI EC detected.\nRace condition possible.");
 	}
 
 	/*
@@ -659,7 +528,7 @@ static umode_t asus_ec_hwmon_is_visible(const void *drvdata,
 }
 
 static int
-asus_wmi_hwmon_add_chan_info(struct hwmon_channel_info *asus_wmi_hwmon_chan,
+asus_ec_hwmon_add_chan_info(struct hwmon_channel_info *asus_ec_hwmon_chan,
 			     struct device *dev, int num,
 			     enum hwmon_sensor_types type, u32 config)
 {
@@ -669,8 +538,8 @@ asus_wmi_hwmon_add_chan_info(struct hwmon_channel_info *asus_wmi_hwmon_chan,
 	if (!cfg)
 		return -ENOMEM;
 
-	asus_wmi_hwmon_chan->type = type;
-	asus_wmi_hwmon_chan->config = cfg;
+	asus_ec_hwmon_chan->type = type;
+	asus_ec_hwmon_chan->config = cfg;
 	for (i = 0; i < num; i++, cfg++)
 		*cfg = config;
 
@@ -683,22 +552,22 @@ static const struct hwmon_ops asus_ec_hwmon_ops = {
 	.read_string = asus_ec_hwmon_read_string,
 };
 
-static struct hwmon_chip_info asus_wmi_chip_info = {
+static struct hwmon_chip_info asus_ec_chip_info = {
 	.ops = &asus_ec_hwmon_ops,
 };
 
-static const struct asus_ec_board_info *__init
-get_board_info(const struct device *dev)
+static unsigned long __init
+get_board_sensors(const struct device *dev)
 {
 	const struct dmi_system_id *dmi_entry;
 
 	dmi_entry = dmi_first_match(asus_ec_dmi_table);
 	if (!dmi_entry) {
 		dev_info(dev, "Unsupported board");
-		return NULL;
+		return 0;
 	}
 
-	return dmi_entry->driver_data;
+	return (unsigned long)dmi_entry->driver_data;
 }
 
 static int __init configure_sensor_setup(struct device *dev)
@@ -706,19 +575,19 @@ static int __init configure_sensor_setup(struct device *dev)
 	struct ec_sensors_data *ec_data = dev_get_drvdata(dev);
 	int nr_count[hwmon_max] = { 0 }, nr_types = 0;
 	struct device *hwdev;
-	struct hwmon_channel_info *asus_wmi_hwmon_chan;
-	const struct hwmon_channel_info **ptr_asus_wmi_ci;
+	struct hwmon_channel_info *asus_ec_hwmon_chan;
+	const struct hwmon_channel_info **ptr_asus_ec_ci;
 	const struct hwmon_chip_info *chip_info;
 	const struct ec_sensor_info *si;
 	enum hwmon_sensor_types type;
 	unsigned int i;
 
-	ec_data->board = get_board_info(dev);
-	if (!ec_data->board) {
+	ec_data->board_sensors = get_board_sensors(dev);
+	if (!ec_data->board_sensors) {
 		return -ENODEV;
 	}
 
-	ec_data->nr_sensors = board_sensors_count(ec_data->board);
+	ec_data->nr_sensors = board_sensors_count(ec_data->board_sensors);
 	ec_data->sensors = devm_kcalloc(dev, ec_data->nr_sensors,
 					sizeof(struct ec_sensor), GFP_KERNEL);
 
@@ -746,27 +615,27 @@ static int __init configure_sensor_setup(struct device *dev)
 	if (nr_count[hwmon_temp])
 		nr_count[hwmon_chip]++, nr_types++;
 
-	asus_wmi_hwmon_chan = devm_kcalloc(
-		dev, nr_types, sizeof(*asus_wmi_hwmon_chan), GFP_KERNEL);
-	if (!asus_wmi_hwmon_chan)
+	asus_ec_hwmon_chan = devm_kcalloc(
+		dev, nr_types, sizeof(*asus_ec_hwmon_chan), GFP_KERNEL);
+	if (!asus_ec_hwmon_chan)
 		return -ENOMEM;
 
-	ptr_asus_wmi_ci = devm_kcalloc(dev, nr_types + 1,
-				       sizeof(*ptr_asus_wmi_ci), GFP_KERNEL);
-	if (!ptr_asus_wmi_ci)
+	ptr_asus_ec_ci = devm_kcalloc(dev, nr_types + 1,
+				       sizeof(*ptr_asus_ec_ci), GFP_KERNEL);
+	if (!ptr_asus_ec_ci)
 		return -ENOMEM;
 
-	asus_wmi_chip_info.info = ptr_asus_wmi_ci;
-	chip_info = &asus_wmi_chip_info;
+	asus_ec_chip_info.info = ptr_asus_ec_ci;
+	chip_info = &asus_ec_chip_info;
 
 	for (type = 0; type < hwmon_max; ++type) {
 		if (!nr_count[type])
 			continue;
 
-		asus_wmi_hwmon_add_chan_info(asus_wmi_hwmon_chan, dev,
+		asus_ec_hwmon_add_chan_info(asus_ec_hwmon_chan, dev,
 					     nr_count[type], type,
 					     hwmon_attributes[type]);
-		*ptr_asus_wmi_ci++ = asus_wmi_hwmon_chan++;
+		*ptr_asus_ec_ci++ = asus_ec_hwmon_chan++;
 	}
 
 	dev_info(dev, "board has %d EC sensors that span %d registers",
@@ -795,16 +664,16 @@ static int __init asus_ec_probe(struct platform_device *pdev)
 	return status;
 }
 
-static const struct acpi_device_id asus_ec_ids[] = {
+static const struct acpi_device_id acpi_ec_ids[] = {
 	/* Embedded Controller Device */
-	{"PNP0C09", 0},
+	{ "PNP0C09", 0 },
 	{}
 };
 
 static struct platform_driver asus_ec_sensors_platform_driver = {
 	.driver = {
 		.name	= "asus-ec-sensors",
-		.acpi_match_table = asus_ec_ids,
+		.acpi_match_table = acpi_ec_ids,
 	},
 };
 
@@ -817,7 +686,6 @@ MODULE_PARM_DESC(mutex_path,
 
 MODULE_AUTHOR("Eugene Shalygin <eugene.shalygin@gmail.com>");
 MODULE_DESCRIPTION(
-	"HWMON driver for sensors accessible via EC in ASUS motherboards");
+	"HWMON driver for sensors accessible via ACPI EC in ASUS motherboards");
 MODULE_LICENSE("GPL");
-MODULE_VERSION("1");
-// kate: indent-mode cstyle; indent-width 8; replace-tabs off; tab-width 8;
+MODULE_VERSION("0");
