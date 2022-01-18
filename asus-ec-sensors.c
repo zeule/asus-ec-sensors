@@ -641,7 +641,7 @@ static int __init configure_sensor_setup(struct device *dev)
 	dev_info(dev, "board has %d EC sensors that span %d registers",
 		 ec_data->nr_sensors, ec_data->nr_registers);
 
-	hwdev = devm_hwmon_device_register_with_info(dev, "asus-ec-sensors",
+	hwdev = devm_hwmon_device_register_with_info(dev, "asus_ec_sensors",
 						     ec_data, chip_info, NULL);
 
 	return PTR_ERR_OR_ZERO(hwdev);
@@ -688,4 +688,3 @@ MODULE_AUTHOR("Eugene Shalygin <eugene.shalygin@gmail.com>");
 MODULE_DESCRIPTION(
 	"HWMON driver for sensors accessible via ACPI EC in ASUS motherboards");
 MODULE_LICENSE("GPL");
-MODULE_VERSION("0");
