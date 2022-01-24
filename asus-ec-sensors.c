@@ -206,8 +206,7 @@ static const struct dmi_system_id asus_ec_dmi_table[] __initconst = {
 		SENSOR_TEMP_VRM | SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "ROG STRIX X570-F GAMING",
 		SENSOR_SET_TEMP_CHIPSET_CPU_MB |
-		SENSOR_TEMP_T_SENSOR | SENSOR_FAN_CHIPSET
-	),
+		SENSOR_TEMP_T_SENSOR | SENSOR_FAN_CHIPSET),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "ROG STRIX X570-I GAMING",
 		SENSOR_TEMP_T_SENSOR | SENSOR_FAN_VRM_HS |
 		SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU),
@@ -222,19 +221,22 @@ struct ec_sensor {
 struct ec_sensors_data {
 	unsigned long board_sensors;
 	struct ec_sensor *sensors;
-	/** EC registers to read from */
+	/* EC registers to read from */
 	u16 *registers;
 	u8 *read_buffer;
-	/** sorted list of unique register banks */
+	/* sorted list of unique register banks */
 	u8 banks[ASUS_EC_MAX_BANK + 1];
-	/** in jiffies */
+	/* in jiffies */
 	unsigned long last_updated;
 	acpi_handle aml_mutex;
-	/** number of board EC sensors */
+	/* number of board EC sensors */
 	u8 nr_sensors;
-	/** number of EC registers to read (sensor might span more than 1 register) */
+	/*
+	 * number of EC registers to read
+	 * (sensor might span more than 1 register)
+	 */
 	u8 nr_registers;
-	/** number of unique register banks */
+	/* number of unique register banks */
 	u8 nr_banks;
 };
 
@@ -326,7 +328,7 @@ static void __init fill_ec_registers(struct ec_sensors_data *ec)
 	}
 }
 
-static acpi_handle asus_hw_access_mutex(struct device *dev)
+static acpi_handle __init asus_hw_access_mutex(struct device *dev)
 {
 	const char *mutex_path;
 	acpi_handle res;
@@ -376,9 +378,7 @@ static int asus_ec_block_read(const struct device *dev,
 			"Concurrent access to the ACPI EC detected.\nRace condition possible.");
 	}
 
-	/*
-	 * read registers minimizing bank switches.
-	 */
+	/* read registers minimizing bank switches. */
 	for (ibank = 0; ibank < ec->nr_banks; ibank++) {
 		if (bank != ec->banks[ibank]) {
 			bank = ec->banks[ibank];
@@ -531,7 +531,7 @@ static umode_t asus_ec_hwmon_is_visible(const void *drvdata,
 	return find_ec_sensor_index(state, type, channel) >= 0 ? S_IRUGO : 0;
 }
 
-static int
+static int __init
 asus_ec_hwmon_add_chan_info(struct hwmon_channel_info *asus_ec_hwmon_chan,
 			     struct device *dev, int num,
 			     enum hwmon_sensor_types type, u32 config)
@@ -645,7 +645,7 @@ static int __init configure_sensor_setup(struct device *dev)
 	dev_info(dev, "board has %d EC sensors that span %d registers",
 		 ec_data->nr_sensors, ec_data->nr_registers);
 
-	hwdev = devm_hwmon_device_register_with_info(dev, "asus_ec_sensors",
+	hwdev = devm_hwmon_device_register_with_info(dev, "asusec",
 						     ec_data, chip_info, NULL);
 
 	return PTR_ERR_OR_ZERO(hwdev);
