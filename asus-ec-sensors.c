@@ -220,7 +220,7 @@ static const struct dmi_system_id asus_ec_dmi_table[] __initconst = {
 
 struct ec_sensor {
 	unsigned int info_index;
-	u32 cached_value;
+	s32 cached_value;
 };
 
 struct ec_sensors_data {
@@ -407,15 +407,15 @@ static int asus_ec_block_read(const struct device *dev,
 	return status;
 }
 
-static inline u32 get_sensor_value(const struct ec_sensor_info *si, u8 *data)
+static inline s32 get_sensor_value(const struct ec_sensor_info *si, u8 *data)
 {
 	switch (si->addr.components.size) {
 	case 1:
-		return *data;
+		return (s8)*data;
 	case 2:
-		return get_unaligned_be16(data);
+		return (s16)get_unaligned_be16(data);
 	case 4:
-		return get_unaligned_be32(data);
+		return (s32)get_unaligned_be32(data);
 	default:
 		return 0;
 	}
@@ -461,7 +461,7 @@ cleanup:
 	return status;
 }
 
-static int scale_sensor_value(u32 value, int data_type)
+static int scale_sensor_value(s32 value, int data_type)
 {
 	switch (data_type) {
 	case hwmon_curr:
@@ -475,7 +475,7 @@ static int scale_sensor_value(u32 value, int data_type)
 
 static int get_cached_value_or_update(const struct device *dev,
 				      int sensor_index,
-				      struct ec_sensors_data *state, u32 *value)
+				      struct ec_sensors_data *state, s32 *value)
 {
 	if (time_after(jiffies, state->last_updated + HZ)) {
 		if (update_ec_sensors(dev, state)) {
@@ -498,7 +498,7 @@ static int asus_ec_hwmon_read(struct device *dev, enum hwmon_sensor_types type,
 			      u32 attr, int channel, long *val)
 {
 	int ret;
-	u32 value = 0;
+	s32 value = 0;
 
 	struct ec_sensors_data *state = dev_get_drvdata(dev);
 	int sidx = find_ec_sensor_index(state, type, channel);
