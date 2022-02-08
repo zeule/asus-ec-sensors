@@ -36,6 +36,10 @@
 
 #include <asm/unaligned.h>
 
+#ifndef MILLI
+#define MILLI	1000UL
+#endif
+
 static char *mutex_path_override;
 
 /* Writing to this EC register switches EC bank */
