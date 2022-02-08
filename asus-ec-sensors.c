@@ -18,6 +18,7 @@
  * - VRM Heat Sink fan RPM
  * - Water Flow fan RPM
  * - CPU current
+ * - CPU core voltage
  */
 
 #include <linux/acpi.h>
@@ -100,6 +101,8 @@ enum ec_sensors {
 	ec_sensor_temp_t_sensor,
 	/* VRM temperature [℃] */
 	ec_sensor_temp_vrm,
+	/* CPU Core voltage [mV] */
+	ec_sensor_in_cpu_core,
 	/* CPU_Opt fan [RPM] */
 	ec_sensor_fan_cpu_opt,
 	/* VRM heat sink fan [RPM] */
@@ -121,6 +124,7 @@ enum ec_sensors {
 #define SENSOR_TEMP_MB BIT(ec_sensor_temp_mb)
 #define SENSOR_TEMP_T_SENSOR BIT(ec_sensor_temp_t_sensor)
 #define SENSOR_TEMP_VRM BIT(ec_sensor_temp_vrm)
+#define SENSOR_IN_CPU_CORE BIT(ec_sensor_in_cpu_core)
 #define SENSOR_FAN_CPU_OPT BIT(ec_sensor_fan_cpu_opt)
 #define SENSOR_FAN_VRM_HS BIT(ec_sensor_fan_vrm_hs)
 #define SENSOR_FAN_CHIPSET BIT(ec_sensor_fan_chipset)
@@ -139,6 +143,8 @@ static const struct ec_sensor_info known_ec_sensors[] = {
 	[ec_sensor_temp_t_sensor] =
 		EC_SENSOR("T_Sensor", hwmon_temp, 1, 0x00, 0x3d),
 	[ec_sensor_temp_vrm] = EC_SENSOR("VRM", hwmon_temp, 1, 0x00, 0x3e),
+	[ec_sensor_in_cpu_core] =
+		EC_SENSOR("CPU Core", hwmon_in, 2, 0x00, 0xa2),
 	[ec_sensor_fan_cpu_opt] =
 		EC_SENSOR("CPU_Opt", hwmon_fan, 2, 0x00, 0xb0),
 	[ec_sensor_fan_vrm_hs] = EC_SENSOR("VRM HS", hwmon_fan, 2, 0x00, 0xb2),
@@ -172,31 +178,34 @@ static const struct dmi_system_id asus_ec_dmi_table[] __initconst = {
 		SENSOR_TEMP_T_SENSOR | SENSOR_FAN_CHIPSET),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "Pro WS X570-ACE",
 		SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_VRM |
-		SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU),
+		SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU | SENSOR_IN_CPU_CORE),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE,
 			      "ROG CROSSHAIR VIII DARK HERO",
 		SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
 		SENSOR_TEMP_VRM | SENSOR_SET_TEMP_WATER |
-		SENSOR_FAN_CPU_OPT | SENSOR_FAN_WATER_FLOW | SENSOR_CURR_CPU),
+		SENSOR_FAN_CPU_OPT | SENSOR_FAN_WATER_FLOW |
+		SENSOR_CURR_CPU | SENSOR_IN_CPU_CORE),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE,
 			      "ROG CROSSHAIR VIII FORMULA",
 		SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
 		SENSOR_TEMP_VRM | SENSOR_FAN_CPU_OPT | SENSOR_FAN_CHIPSET |
-		SENSOR_CURR_CPU),
+		SENSOR_CURR_CPU | SENSOR_IN_CPU_CORE),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "ROG CROSSHAIR VIII HERO",
 		SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
 		SENSOR_TEMP_VRM | SENSOR_SET_TEMP_WATER |
 		SENSOR_FAN_CPU_OPT | SENSOR_FAN_CHIPSET |
-		SENSOR_FAN_WATER_FLOW | SENSOR_CURR_CPU),
+		SENSOR_FAN_WATER_FLOW | SENSOR_CURR_CPU | SENSOR_IN_CPU_CORE),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE,
 			      "ROG CROSSHAIR VIII HERO (WI-FI)",
 		SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
 		SENSOR_TEMP_VRM | SENSOR_SET_TEMP_WATER |
 		SENSOR_FAN_CPU_OPT | SENSOR_FAN_CHIPSET |
-		SENSOR_FAN_WATER_FLOW | SENSOR_CURR_CPU),
-	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "ROG CROSSHAIR VIII IMPACT",
+		SENSOR_FAN_WATER_FLOW | SENSOR_CURR_CPU | SENSOR_IN_CPU_CORE),
+	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE,
+			      "ROG CROSSHAIR VIII IMPACT",
 		SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
-		SENSOR_TEMP_VRM | SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU),
+		SENSOR_TEMP_VRM | SENSOR_FAN_CHIPSET |
+		SENSOR_CURR_CPU | SENSOR_IN_CPU_CORE),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "ROG STRIX B550-E GAMING",
 		SENSOR_SET_TEMP_CHIPSET_CPU_MB |
 		SENSOR_TEMP_T_SENSOR |
@@ -204,17 +213,19 @@ static const struct dmi_system_id asus_ec_dmi_table[] __initconst = {
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "ROG STRIX B550-I GAMING",
 		SENSOR_SET_TEMP_CHIPSET_CPU_MB |
 		SENSOR_TEMP_T_SENSOR |
-		SENSOR_TEMP_VRM | SENSOR_FAN_VRM_HS | SENSOR_CURR_CPU),
+		SENSOR_TEMP_VRM | SENSOR_FAN_VRM_HS |
+		SENSOR_CURR_CPU | SENSOR_IN_CPU_CORE),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "ROG STRIX X570-E GAMING",
 		SENSOR_SET_TEMP_CHIPSET_CPU_MB |
 		SENSOR_TEMP_T_SENSOR |
-		SENSOR_TEMP_VRM | SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU),
+		SENSOR_TEMP_VRM | SENSOR_FAN_CHIPSET |
+		SENSOR_CURR_CPU | SENSOR_IN_CPU_CORE),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "ROG STRIX X570-F GAMING",
 		SENSOR_SET_TEMP_CHIPSET_CPU_MB |
 		SENSOR_TEMP_T_SENSOR | SENSOR_FAN_CHIPSET),
 	DMI_EXACT_MATCH_BOARD(VENDOR_ASUS_UPPER_CASE, "ROG STRIX X570-I GAMING",
 		SENSOR_TEMP_T_SENSOR | SENSOR_FAN_VRM_HS |
-		SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU),
+		SENSOR_FAN_CHIPSET | SENSOR_CURR_CPU | SENSOR_IN_CPU_CORE),
 	{}
 };
 
@@ -345,7 +356,7 @@ static acpi_handle __init asus_hw_access_mutex(struct device *dev)
 	status = acpi_get_handle(NULL, (acpi_string)mutex_path, &res);
 	if (ACPI_FAILURE(status)) {
 		dev_err(dev,
-			"Could not get hardware access guard mutex '%s': error %d",
+		"Could not get hardware access guard mutex '%s': error %d",
 			mutex_path, status);
 		return NULL;
 	}
@@ -380,7 +391,8 @@ static int asus_ec_block_read(const struct device *dev,
 	if (prev_bank) {
 		/* oops... somebody else is working with the EC too */
 		dev_warn(dev,
-			"Concurrent access to the ACPI EC detected.\nRace condition possible.");
+			"Concurrent access to the ACPI EC detected.\n"
+			"Race condition possible.");
 	}
 
 	/* read registers minimizing bank switches. */
@@ -461,12 +473,11 @@ cleanup:
 	return status;
 }
 
-static int scale_sensor_value(s32 value, int data_type)
+static long scale_sensor_value(s32 value, int data_type)
 {
 	switch (data_type) {
 	case hwmon_curr:
 	case hwmon_temp:
-	case hwmon_in:
 		return value * MILLI;
 	default:
 		return value;
