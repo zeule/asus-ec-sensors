@@ -365,7 +365,8 @@ static acpi_handle __init asus_hw_access_mutex(struct device *dev)
 	status = acpi_get_handle(NULL, (acpi_string)mutex_path, &res);
 	if (ACPI_FAILURE(status)) {
 		dev_err(dev,
-		"Could not get hardware access guard mutex '%s': error %d",
+			"Could not get hardware access guard mutex '%s':"
+			"error %d",
 			mutex_path, status);
 		return NULL;
 	}
@@ -627,15 +628,13 @@ static int __init asus_ec_probe(struct platform_device *pdev)
 	unsigned int i;
 
 	board_sensors = get_board_sensors(dev);
-	if (!board_sensors) {
+	if (!board_sensors)
 		return -ENODEV;
-	}
 
 	ec_data = devm_kzalloc(dev, sizeof(struct ec_sensors_data),
-			     GFP_KERNEL);
-	if (!ec_data) {
+			       GFP_KERNEL);
+	if (!ec_data)
 		return -ENOMEM;
-	}
 
 	dev_set_drvdata(dev, ec_data);
 	ec_data->board_sensors = board_sensors;
@@ -649,9 +648,8 @@ static int __init asus_ec_probe(struct platform_device *pdev)
 	ec_data->read_buffer = devm_kcalloc(dev, ec_data->nr_registers,
 					    sizeof(u8), GFP_KERNEL);
 
-	if (!ec_data->registers || !ec_data->read_buffer) {
+	if (!ec_data->registers || !ec_data->read_buffer)
 		return -ENOMEM;
-	}
 
 	fill_ec_registers(ec_data);
 
