@@ -26,10 +26,22 @@ else
 	endif
 endif
 
+ASUS_EC_SENSORS_CFLAGS=""
+
+KVER_NUM = $(word 1, $(subst -, ,$(KVER)))
+
+HAVE_MILLI := $(shell echo -e "5.15\n$(KVER_NUM)"|sort -Ct. -k1,1n -k2,2n && \
+echo YES)
+
+ifneq ("YES", "$(HAVE_MILLI)")
+	ASUS_EC_SENSORS_CFLAGS +=-DMILLI=1000UL
+endif
+
 .PHONY: all install modules modules_install clean dkms dkms_clean dkms_configure
 all: modules
 modules modules_install clean:
-	@$(MAKE) INSTALL_MOD_DIR=$(MOD_SUBDIR) -C $(KBDIR) M=$(CURDIR) $@
+	@$(MAKE) EXTRA_CFLAGS="$(ASUS_EC_SENSORS_CFLAGS)" \
+		INSTALL_MOD_DIR=$(MOD_SUBDIR) -C $(KBDIR) M=$(CURDIR) $@
 
 # DKMS
 DRIVER_NAME = asus-ec-sensors
