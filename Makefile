@@ -30,8 +30,8 @@ ASUS_EC_SENSORS_CFLAGS=""
 
 KVER_NUM = $(word 1, $(subst -, ,$(KVER)))
 
-HAVE_MILLI := $(shell echo -e "5.15\n$(KVER_NUM)"|sort -Ct. -k1,1n -k2,2n && \
-echo YES)
+HAVE_MILLI := $(shell /bin/echo -e "5.15\n$(KVER_NUM)"|\
+sort -Ct. -k1,1n -k2,2n && echo YES)
 
 ifneq ("YES", "$(HAVE_MILLI)")
 	ASUS_EC_SENSORS_CFLAGS +=-DMILLI=1000UL
