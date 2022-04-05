@@ -26,6 +26,13 @@ the HWMON.
 9. ROG STRIX X570-F GAMING
 10. ROG STRIX X570-I GAMING
 
+## Installation
+
+[Gentoo ebuild](https://github.com/zeule/gentoo-zeule/tree/master/sys-power/asus-ec-sensors) and 
+[AUR package](https://aur.archlinux.org/packages/asus-ec-sensors-dkms-git) are available. Alternatively,
+you can clone the repository and then use standard `make` and `make modules_install` (as root) commands.
+If you use DKMS, `make dkms` will build the module and add it to the DKMS tree for future updates.
+
 ## Adding a new motherboard
 
 First, you need to obtain ACPI DSDT source for your board. You can get it from `/sys/firmware/acpi/tables/DSDT` 
