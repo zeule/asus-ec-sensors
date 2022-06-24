@@ -56,6 +56,8 @@ static char *mutex_path_override;
 
 #define ASUS_HW_ACCESS_MUTEX_RMTW_ASMX	"\\RMTW.ASMX"
 
+#define ASUS_HW_ACCESS_MUTEX_SB_PCI0_SBRG_SIO1_MUT0 "\\_SB_.PCI0.SBRG.SIO1.MUT0" 
+
 #define MAX_IDENTICAL_BOARD_VARIATIONS	3
 
 /* Moniker for the ACPI global lock (':' is not allowed in ASL identifiers) */
@@ -344,6 +346,15 @@ static const struct ec_board_info board_info[] = {
 		.sensors = SENSOR_TEMP_T_SENSOR | SENSOR_TEMP_VRM,
 		.mutex_path = ASUS_HW_ACCESS_MUTEX_RMTW_ASMX,
 		.family = family_intel_600_series,
+	},
+	{
+	        .board_names = {"ROG ZENITH II EXTREME"},
+		.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
+		        SENSOR_TEMP_VRM | SENSOR_SET_TEMP_WATER |
+		        SENSOR_FAN_CPU_OPT | SENSOR_FAN_CHIPSET | SENSOR_FAN_VRM_HS |
+                        SENSOR_FAN_WATER_FLOW | SENSOR_CURR_CPU | SENSOR_IN_CPU_CORE,
+	        .mutex_path = ASUS_HW_ACCESS_MUTEX_SB_PCI0_SBRG_SIO1_MUT0,
+		.family = family_amd_400_series,
 	},
 	{}
 };

@@ -31,6 +31,7 @@ the HWMON.
  * ROG STRIX X570-F GAMING
  * ROG STRIX X570-I GAMING
  * ROG STRIX Z690-A GAMING WIFI D4
+ * ROG Zenith II Extreme
 
 ## Installation
 
