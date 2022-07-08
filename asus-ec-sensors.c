@@ -123,6 +123,12 @@ enum ec_sensors {
 	ec_sensor_temp_water_in,
 	/* "Water_Out" temperature sensor reading [℃] */
 	ec_sensor_temp_water_out,
+	ec_sensor_temp_water_block,
+	ec_sensor_temp_water_block_out,
+	ec_sensor_temp_t_sensor_2,
+	ec_sensor_temp_sensor_extra_1,
+	ec_sensor_temp_sensor_extra_2,
+	ec_sensor_temp_sensor_extra_3,
 };
 
 #define SENSOR_TEMP_CHIPSET BIT(ec_sensor_temp_chipset)
@@ -138,6 +144,12 @@ enum ec_sensors {
 #define SENSOR_CURR_CPU BIT(ec_sensor_curr_cpu)
 #define SENSOR_TEMP_WATER_IN BIT(ec_sensor_temp_water_in)
 #define SENSOR_TEMP_WATER_OUT BIT(ec_sensor_temp_water_out)
+#define SENSOR_TEMP_WATER_BLOCK BIT(ec_sensor_temp_water_block)
+#define SENSOR_TEMP_WATER_BLOCK_OUT BIT(ec_sensor_temp_water_block_out)
+#define SENSOR_TEMP_T_SENSOR_2 BIT(ec_sensor_temp_t_sensor_2)
+#define SENSOR_TEMP_SENSOR_EXTRA_1 BIT(ec_sensor_temp_sensor_extra_1)
+#define SENSOR_TEMP_SENSOR_EXTRA_2 BIT(ec_sensor_temp_sensor_extra_2)
+#define SENSOR_TEMP_SENSOR_EXTRA_3 BIT(ec_sensor_temp_sensor_extra_3)
 
 enum board_family {
 	family_unknown,
@@ -200,6 +212,12 @@ static const struct ec_sensor_info sensors_family_amd_500[] = {
 		EC_SENSOR("Water_In", hwmon_temp, 1, 0x01, 0x00),
 	[ec_sensor_temp_water_out] =
 		EC_SENSOR("Water_Out", hwmon_temp, 1, 0x01, 0x01),
+	[ec_sensor_temp_water_block] = EC_SENSOR("Water_Block", hwmon_temp, 1, 0x01, 0x02),
+	[ec_sensor_temp_water_block_out] = EC_SENSOR("Water_Block_Out", hwmon_temp, 1, 0x01, 0x03),
+	[ec_sensor_temp_t_sensor_2] = EC_SENSOR("T_sensor_2", hwmon_temp, 1, 0x01, 0x0a ),
+	[ec_sensor_temp_sensor_extra_1] = EC_SENSOR("Extra_1", hwmon_temp, 1, 0x01, 0x09 ),
+	[ec_sensor_temp_sensor_extra_2] = EC_SENSOR("Extra_2", hwmon_temp, 1, 0x01, 0x0b ),
+	[ec_sensor_temp_sensor_extra_3] = EC_SENSOR("Extra_3", hwmon_temp, 1, 0x01, 0x0c ),
 };
 
 static const struct ec_sensor_info sensors_family_intel_600[] = {
@@ -352,9 +370,12 @@ static const struct ec_board_info board_info[] = {
 		.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
 		        SENSOR_TEMP_VRM | SENSOR_SET_TEMP_WATER |
 		        SENSOR_FAN_CPU_OPT | SENSOR_FAN_CHIPSET | SENSOR_FAN_VRM_HS |
-                        SENSOR_FAN_WATER_FLOW | SENSOR_CURR_CPU | SENSOR_IN_CPU_CORE,
+                        SENSOR_FAN_WATER_FLOW | SENSOR_CURR_CPU | SENSOR_IN_CPU_CORE |
+		        SENSOR_TEMP_WATER_BLOCK | SENSOR_TEMP_WATER_BLOCK_OUT |
+  		        SENSOR_TEMP_T_SENSOR_2 | SENSOR_TEMP_SENSOR_EXTRA_1 |
+		        SENSOR_TEMP_SENSOR_EXTRA_2 | SENSOR_TEMP_SENSOR_EXTRA_3,
 	        .mutex_path = ASUS_HW_ACCESS_MUTEX_SB_PCI0_SBRG_SIO1_MUT0,
-		.family = family_amd_400_series,
+		.family = family_amd_500_series,
 	},
 	{}
 };
