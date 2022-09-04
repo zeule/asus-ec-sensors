@@ -56,7 +56,7 @@ static char *mutex_path_override;
 
 #define ASUS_HW_ACCESS_MUTEX_RMTW_ASMX	"\\RMTW.ASMX"
 
-#define ASUS_HW_ACCESS_MUTEX_SB_PCI0_SBRG_SIO1_MUT0 "\\_SB_.PCI0.SBRG.SIO1.MUT0" 
+#define ASUS_HW_ACCESS_MUTEX_SB_PCI0_SBRG_SIO1_MUT0 "\\_SB_.PCI0.SBRG.SIO1.MUT0"
 
 #define MAX_IDENTICAL_BOARD_VARIATIONS	3
 
@@ -224,13 +224,13 @@ static const struct ec_sensor_info sensors_family_amd_500[] = {
 	[ec_sensor_temp_water_block_out] =
 		EC_SENSOR("Water_Block_Out", hwmon_temp, 1, 0x01, 0x03),
 	[ec_sensor_temp_sensor_extra_1] =
-		EC_SENSOR("Extra_1", hwmon_temp, 1, 0x01, 0x09 ),
+		EC_SENSOR("Extra_1", hwmon_temp, 1, 0x01, 0x09),
 	[ec_sensor_temp_t_sensor_2] =
-		EC_SENSOR("T_sensor_2", hwmon_temp, 1, 0x01, 0x0a ),
+		EC_SENSOR("T_sensor_2", hwmon_temp, 1, 0x01, 0x0a),
 	[ec_sensor_temp_sensor_extra_2] =
-		EC_SENSOR("Extra_2", hwmon_temp, 1, 0x01, 0x0b ),
+		EC_SENSOR("Extra_2", hwmon_temp, 1, 0x01, 0x0b),
 	[ec_sensor_temp_sensor_extra_3] =
-		EC_SENSOR("Extra_3", hwmon_temp, 1, 0x01, 0x0c ),
+		EC_SENSOR("Extra_3", hwmon_temp, 1, 0x01, 0x0c),
 };
 
 static const struct ec_sensor_info sensors_family_intel_300[] = {
@@ -649,8 +649,8 @@ static int asus_ec_block_read(const struct device *dev,
 	if (prev_bank) {
 		/* oops... somebody else is working with the EC too */
 		dev_warn(dev,
-			"Concurrent access to the ACPI EC detected.\n"
-			"Race condition possible.");
+			"Concurrent access to the ACPI EC detected.\nRace condition
+possible.");
 	}
 
 	/* read registers minimizing bank switches. */
