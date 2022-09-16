@@ -45,9 +45,8 @@ You can use other monitoring software to learn whether the motherboard provide s
 
 [Libre Hardware Monitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) contains a very similar to this
 driver
-[implementation](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/
-Hardware/Motherboard/Lpc/EC/EmbeddedController.cs) for EC sensors, you can look there or even test and implement
-support for your board with Libre Hardware Monitor first.
+[implementation](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/blob/master/LibreHardwareMonitorLib/Hardware/Motherboard/Lpc/EC/EmbeddedController.cs)
+for EC sensors, you can look there or even test and implement support for your board with Libre Hardware Monitor first.
 
 First, you need identification data for your board, which are vendor and board names. You can get them from DMI tables
 using either the `dmidecode` utility or run `grep -e ''  -n /sys/class/dmi/id/board_{name,vendor}`. If the vendor name
