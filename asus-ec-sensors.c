@@ -689,8 +689,7 @@ static int asus_ec_block_read(const struct device *dev,
 	if (prev_bank) {
 		/* oops... somebody else is working with the EC too */
 		dev_warn(dev,
-			"Concurrent access to the ACPI EC detected.\nRace condition
-possible.");
+			"Concurrent access to the ACPI EC detected.\nRace condition possible.");
 	}
 
 	/* read registers minimizing bank switches. */
@@ -1010,12 +1009,6 @@ static struct platform_driver asus_ec_sensors_platform_driver = {
 
 static struct platform_device *asus_ec_sensors_platform_device;
 
-static void cleanup_device(void)
-{
-	platform_device_unregister(asus_ec_sensors_platform_device);
-	platform_driver_unregister(&asus_ec_sensors_platform_driver);
-}
-
 static int __init asus_ec_init(void)
 {
 	asus_ec_sensors_platform_device =
@@ -1030,7 +1023,8 @@ static int __init asus_ec_init(void)
 
 static void __exit asus_ec_exit(void)
 {
-	cleanup_device();
+	platform_device_unregister(asus_ec_sensors_platform_device);
+	platform_driver_unregister(&asus_ec_sensors_platform_driver);
 }
 
 module_init(asus_ec_init);
