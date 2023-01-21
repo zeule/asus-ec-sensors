@@ -7,7 +7,8 @@ available through the embedded controller (EC) registers.
 
 The EC registers do not provide critical values for the sensors and as such they are not published to the HWMON.
 
-This driver is available in the mainline kernel, and code in this repository is kept in sync with the hwmon-next branch.
+This driver is available in the mainline kernel since version 5.18, and code in this repository is kept in sync with
+the hwmon-next branch.
 
 ## Supported motherboards
 
