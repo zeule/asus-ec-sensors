@@ -162,6 +162,7 @@ enum board_family {
 	family_amd_400_series,
 	family_amd_500_series,
 	family_intel_300_series,
+	family_intel_400_series,
 	family_intel_600_series
 };
 
@@ -251,6 +252,16 @@ static const struct ec_sensor_info sensors_family_intel_300[] = {
 		EC_SENSOR("Water_In", hwmon_temp, 1, 0x01, 0x00),
 	[ec_sensor_temp_water_out] =
 		EC_SENSOR("Water_Out", hwmon_temp, 1, 0x01, 0x01),
+};
+
+static const struct ec_sensor_info sensors_family_intel_400[] = {
+	[ec_sensor_temp_chipset] =
+		EC_SENSOR("Chipset", hwmon_temp, 1, 0x00, 0x3a),
+	[ec_sensor_temp_t_sensor] =
+		EC_SENSOR("T_Sensor", hwmon_temp, 1, 0x00, 0x3d),
+	[ec_sensor_temp_vrm] = EC_SENSOR("VRM", hwmon_temp, 1, 0x00, 0x3e),
+	[ec_sensor_fan_cpu_opt] =
+		EC_SENSOR("CPU_Opt", hwmon_fan, 2, 0x00, 0xb0),
 };
 
 static const struct ec_sensor_info sensors_family_intel_600[] = {
@@ -408,6 +419,12 @@ static const struct ec_board_info board_info_strix_x570_i_gaming = {
 	.family = family_amd_500_series,
 };
 
+static const struct ec_board_info board_info_strix_z490_i_gaming = {
+	.sensors = SENSOR_TEMP_CHIPSET | SENSOR_TEMP_VRM | SENSOR_TEMP_T_SENSOR,
+	.mutex_path = ASUS_HW_ACCESS_MUTEX_ASMX,
+	.family = family_intel_400_series,
+};
+
 static const struct ec_board_info board_info_strix_z690_a_gaming_wifi_d4 = {
 	.sensors = SENSOR_TEMP_T_SENSOR | SENSOR_TEMP_VRM,
 	.mutex_path = ASUS_HW_ACCESS_MUTEX_RMTW_ASMX,
@@ -473,6 +490,8 @@ static const struct dmi_system_id dmi_table[] = {
 					&board_info_strix_x570_f_gaming),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ROG STRIX X570-I GAMING",
 					&board_info_strix_x570_i_gaming),
+	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ROG STRIX Z490-I GAMING",
+					&board_info_strix_z490_i_gaming),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ROG STRIX Z690-A GAMING WIFI D4",
 					&board_info_strix_z690_a_gaming_wifi_d4),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ROG ZENITH II EXTREME",
@@ -938,6 +957,9 @@ static int asus_ec_probe(struct platform_device *pdev)
 		break;
 	case family_intel_300_series:
 		ec_data->sensors_info = sensors_family_intel_300;
+		break;
+	case family_intel_400_series:
+		ec_data->sensors_info = sensors_family_intel_400;
 		break;
 	case family_intel_600_series:
 		ec_data->sensors_info = sensors_family_intel_600;
