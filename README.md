@@ -12,6 +12,7 @@ the hwmon-next branch.
 
 ## Supported motherboards
 
+ * MAXIMUS VI HERO
  * PRIME X470-PRO
  * PRIME X570-PRO
  * Pro WS X570-ACE
