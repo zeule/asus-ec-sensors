@@ -63,6 +63,8 @@ static char *mutex_path_override;
 
 #define ASUS_HW_ACCESS_MUTEX_SB_PCI0_SBRG_SIO1_MUT0 "\\_SB_.PCI0.SBRG.SIO1.MUT0"
 
+#define ASUS_HW_ACCESS_MUTEX_SB_PCI0_LPCB_SIO1_MUT0 "\\_SB_.PCI0.LPCB.SIO1.MUT0"
+
 #define MAX_IDENTICAL_BOARD_VARIATIONS	3
 
 /* Moniker for the ACPI global lock (':' is not allowed in ASL identifiers) */
@@ -420,6 +422,15 @@ static const struct ec_board_info board_info_crosshair_viii_hero = {
 	.family = family_amd_500_series,
 };
 
+static const struct ec_board_info board_info_maximus_x_hero = {
+	.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB |
+		SENSOR_TEMP_T_SENSOR |
+		SENSOR_TEMP_VRM | SENSOR_SET_TEMP_WATER |
+		SENSOR_FAN_CPU_OPT | SENSOR_FAN_WATER_FLOW,
+	.mutex_path = ASUS_HW_ACCESS_MUTEX_SB_PCI0_LPCB_SIO1_MUT0, 
+	.family = family_intel_300_series,
+};
+
 static const struct ec_board_info board_info_maximus_xi_hero = {
 	.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB |
 		SENSOR_TEMP_T_SENSOR |
@@ -569,6 +580,8 @@ static const struct dmi_system_id dmi_table[] = {
 					&board_info_crosshair_x670e_hero),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ROG CROSSHAIR X670E GENE",
 					&board_info_crosshair_x670e_gene),
+	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ROG MAXIMUS X HERO",
+					&board_info_maximus_x_hero),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ROG MAXIMUS XI HERO",
 					&board_info_maximus_xi_hero),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ROG MAXIMUS XI HERO (WI-FI)",
