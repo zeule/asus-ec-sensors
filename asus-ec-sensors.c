@@ -176,7 +176,7 @@ enum board_family {
 	family_intel_300_series,
 	family_intel_400_series,
 	family_intel_600_series,
-	family_intel_700_series
+	family_intel_700_series,
 };
 
 /*
@@ -332,11 +332,11 @@ static const struct ec_sensor_info sensors_family_intel_600[] = {
 };
 
 static const struct ec_sensor_info sensors_family_intel_700[] = {
-        [ec_sensor_temp_t_sensor] =
-                EC_SENSOR("T_Sensor", hwmon_temp, 1, 0x01, 0x09),
-        [ec_sensor_temp_vrm] = EC_SENSOR("VRM", hwmon_temp, 1, 0x00, 0x33),
-        [ec_sensor_fan_cpu_opt] =
-                EC_SENSOR("CPU_Opt", hwmon_fan, 2, 0x00, 0xb0),
+	[ec_sensor_temp_t_sensor] =
+		EC_SENSOR("T_Sensor", hwmon_temp, 1, 0x01, 0x09),
+	[ec_sensor_temp_vrm] = EC_SENSOR("VRM", hwmon_temp, 1, 0x00, 0x33),
+	[ec_sensor_fan_cpu_opt] =
+		EC_SENSOR("CPU_Opt", hwmon_fan, 2, 0x00, 0xb0),
 };
 
 /* Shortcuts for common combinations */
@@ -1176,9 +1176,9 @@ static int asus_ec_probe(struct platform_device *pdev)
 	case family_intel_600_series:
 		ec_data->sensors_info = sensors_family_intel_600;
 		break;
-        case family_intel_700_series:
-                ec_data->sensors_info = sensors_family_intel_700;
-                break;
+	case family_intel_700_series:
+		ec_data->sensors_info = sensors_family_intel_700;
+		break;
 	default:
 		dev_err(dev, "Unknown board family: %d",
 			ec_data->board_info->family);
