@@ -144,6 +144,10 @@ enum ec_sensors {
 	ec_sensor_temp_sensor_extra_2,
 	/* "Extra_3" temperature sensor reading [℃] */
 	ec_sensor_temp_sensor_extra_3,
+	/* USB4 fan [RPM] */
+	ec_sensor_fan_usb4,
+	/* M.2 fan [RPM] */
+	ec_sensor_fan_m2,
 };
 
 #define SENSOR_TEMP_CHIPSET BIT(ec_sensor_temp_chipset)
@@ -166,6 +170,8 @@ enum ec_sensors {
 #define SENSOR_TEMP_SENSOR_EXTRA_1 BIT(ec_sensor_temp_sensor_extra_1)
 #define SENSOR_TEMP_SENSOR_EXTRA_2 BIT(ec_sensor_temp_sensor_extra_2)
 #define SENSOR_TEMP_SENSOR_EXTRA_3 BIT(ec_sensor_temp_sensor_extra_3)
+#define SENSOR_FAN_USB4 BIT(ec_sensor_fan_usb4)
+#define SENSOR_FAN_M2 BIT(ec_sensor_fan_m2)
 
 enum board_family {
 	family_unknown,
@@ -173,6 +179,7 @@ enum board_family {
 	family_amd_500_series,
 	family_amd_600_series,
 	family_amd_800_series,
+	family_amd_wrx,
 	family_intel_300_series,
 	family_intel_400_series,
 	family_intel_600_series,
@@ -281,6 +288,15 @@ static const struct ec_sensor_info sensors_family_amd_800[] = {
 		EC_SENSOR("T_Sensor", hwmon_temp, 1, 0x00, 0x36),
 	[ec_sensor_fan_cpu_opt] =
 		EC_SENSOR("CPU_Opt", hwmon_fan, 2, 0x00, 0xb0),
+};
+
+static const struct ec_sensor_info sensors_family_amd_wrx[] = {
+	[ec_sensor_temp_cpu_package] =
+		EC_SENSOR("CPU Package", hwmon_temp, 1, 0x00, 0x31),
+	[ec_sensor_fan_usb4] = EC_SENSOR("USB4", hwmon_fan, 2, 0x00, 0xb6),
+	[ec_sensor_fan_m2] = EC_SENSOR("M.2", hwmon_fan, 2, 0x00, 0xbe),
+	[ec_sensor_temp_t_sensor] =
+		EC_SENSOR("T_Sensor", hwmon_temp, 1, 0x01, 0x04),
 };
 
 static const struct ec_sensor_info sensors_family_intel_300[] = {
@@ -628,6 +644,14 @@ static const struct ec_board_info board_info_tuf_gaming_x670e_plus = {
 	.family = family_amd_600_series,
 };
 
+static const struct ec_board_info board_info_pro_ws_wrx90e_sage_se = {
+	/* Board also has a nct6798 with 7 more fans and temperatures */
+	.sensors = SENSOR_TEMP_CPU_PACKAGE | SENSOR_TEMP_T_SENSOR |
+		SENSOR_FAN_USB4 | SENSOR_FAN_M2,
+	.mutex_path = ASUS_HW_ACCESS_MUTEX_RMTW_ASMX,
+	.family = family_amd_wrx,
+};
+
 #define DMI_EXACT_MATCH_ASUS_BOARD_NAME(name, board_info)                      \
 	{                                                                      \
 		.matches = {                                                   \
@@ -711,6 +735,8 @@ static const struct dmi_system_id dmi_table[] = {
 					&board_info_zenith_ii_extreme),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("TUF GAMING X670E-PLUS",
 					&board_info_tuf_gaming_x670e_plus),
+	DMI_EXACT_MATCH_ASUS_BOARD_NAME("Pro WS WRX90E-SAGE SE",
+					&board_info_pro_ws_wrx90e_sage_se),
 	{},
 };
 
@@ -1177,6 +1203,9 @@ static int asus_ec_probe(struct platform_device *pdev)
 		break;
 	case family_amd_800_series:
 		ec_data->sensors_info = sensors_family_amd_800;
+		break;
+	case family_amd_wrx:
+		ec_data->sensors_info = sensors_family_amd_wrx;
 		break;
 	case family_intel_300_series:
 		ec_data->sensors_info = sensors_family_intel_300;
