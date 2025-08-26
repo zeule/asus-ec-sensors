@@ -499,6 +499,13 @@ static const struct ec_board_info board_info_prime_x670e_pro_wifi = {
 	.family = family_amd_600_series,
 };
 
+static const struct ec_board_info board_info_prime_x870_p = {
+	.sensors = SENSOR_TEMP_CPU | SENSOR_TEMP_CPU_PACKAGE |
+		SENSOR_TEMP_MB | SENSOR_TEMP_VRM | SENSOR_FAN_CPU_OPT,
+	.mutex_path = ASUS_HW_ACCESS_MUTEX_SB_PCI0_SBRG_SIO1_MUT0,
+	.family = family_amd_800_series,
+};
+
 static const struct ec_board_info board_info_prime_z270_a = {
 	.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB |
 		SENSOR_TEMP_T_SENSOR | SENSOR_FAN_CPU_OPT,
@@ -719,6 +726,8 @@ static const struct dmi_system_id dmi_table[] = {
 					&board_info_prime_x570_pro),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("PRIME X670E-PRO WIFI",
 					&board_info_prime_x670e_pro_wifi),
+	DMI_EXACT_MATCH_ASUS_BOARD_NAME("PRIME X870-P",
+					&board_info_prime_x870_p),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("PRIME Z270-A",
 					&board_info_prime_z270_a),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ProArt B550-CREATOR",
