@@ -302,9 +302,11 @@ static const struct ec_sensor_info sensors_family_amd_wrx_90[] = {
 		EC_SENSOR("CPU Package", hwmon_temp, 1, 0x00, 0x31),
 	[ec_sensor_fan_cpu_opt] =
 		EC_SENSOR("CPU_Opt", hwmon_fan, 2, 0x00, 0xb0),
-	[ec_sensor_fan_vrmw_hs] = EC_SENSOR("VRMW HS", hwmon_fan, 2, 0x00, 0xb4),
+	[ec_sensor_fan_vrmw_hs] =
+		EC_SENSOR("VRMW HS", hwmon_fan, 2, 0x00, 0xb4),
 	[ec_sensor_fan_usb4] = EC_SENSOR("USB4", hwmon_fan, 2, 0x00, 0xb6),
-	[ec_sensor_fan_vrme_hs] = EC_SENSOR("VRME HS", hwmon_fan, 2, 0x00, 0xbc),
+	[ec_sensor_fan_vrme_hs] =
+		EC_SENSOR("VRME HS", hwmon_fan, 2, 0x00, 0xbc),
 	[ec_sensor_fan_m2] = EC_SENSOR("M.2", hwmon_fan, 2, 0x00, 0xbe),
 	[ec_sensor_temp_t_sensor] =
 		EC_SENSOR("T_Sensor", hwmon_temp, 1, 0x01, 0x04),
