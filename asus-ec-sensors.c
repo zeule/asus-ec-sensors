@@ -179,7 +179,6 @@ enum ec_sensors {
 #define SENSOR_TEMP_SENSOR_EXTRA_2 BIT(ec_sensor_temp_sensor_extra_2)
 #define SENSOR_TEMP_SENSOR_EXTRA_3 BIT(ec_sensor_temp_sensor_extra_3)
 
-
 enum board_family {
 	family_unknown,
 	family_amd_400_series,
