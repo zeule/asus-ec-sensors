@@ -46,14 +46,8 @@ make the build system to sign the module, if your kernel rejects unsigned ones).
 `sensors` command should show an entry named "asusec-..." with the sensor readings (`sensors 'asusec-*'` will show only
 that entry). Please note the blank value for temperature sensors: -40 (0xD8).
 
-Please ensure that all the list entries you add to the source files keep the alphabetical order of the lists. These
-checks will return nothing if the relevant sections are in the right order:
-```shell
-grep 'static const struct ec_board_info board' asus-ec-sensors.c > a.txt; \
-    LC_COLLATE=C sort a.txt > b.txt; diff -u a.txt b.txt
-grep -P '\tDMI_EXACT_MATCH_ASUS_BOARD_NAME' asus-ec-sensors.c | sed 's/ /_/g' > a.txt; \
-    LC_COLLATE=C sort a.txt > b.txt; diff -u a.txt b.txt
-```
+Please ensure that all the list entries you add to the source files keep the alphabetical order of the lists. The script
+at `scripts/check.sh` can be used to check the order.
 
 Finally, when submitting a pull request via GitHub, please ensure that the definition you provide can be maintained by
 attaching a copy of the DSDT table dump (binary, please, do not decompile), sign-off your commit so that it can be
