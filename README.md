@@ -52,6 +52,7 @@ the hwmon-next branch.
  * ROG ZENITH II EXTREME
  * ROG ZENITH II EXTREME ALPHA
  * TUF GAMING X670E PLUS
+ * TUF GAMING X670E PLUS WIFI
 
 ## Installation
 
