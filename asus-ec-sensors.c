@@ -688,15 +688,6 @@ static const struct ec_board_info board_info_tuf_gaming_x670e_plus = {
 	.family = family_amd_600_series,
 };
 
-static const struct ec_board_info board_info_tuf_gaming_x670e_plus_wifi = {
-	.sensors = SENSOR_TEMP_CPU | SENSOR_TEMP_CPU_PACKAGE |
-		SENSOR_TEMP_MB | SENSOR_TEMP_VRM |
-		SENSOR_TEMP_WATER_IN | SENSOR_TEMP_WATER_OUT |
-		SENSOR_FAN_CPU_OPT,
-	.mutex_path = ACPI_GLOBAL_LOCK_PSEUDO_PATH,
-	.family = family_amd_600_series,
-};
-
 static const struct ec_board_info board_info_zenith_ii_extreme = {
 	.sensors = SENSOR_SET_TEMP_CHIPSET_CPU_MB | SENSOR_TEMP_T_SENSOR |
 		SENSOR_TEMP_VRM | SENSOR_SET_TEMP_WATER |
@@ -801,7 +792,7 @@ static const struct dmi_system_id dmi_table[] = {
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("TUF GAMING X670E-PLUS",
 					&board_info_tuf_gaming_x670e_plus),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("TUF GAMING X670E-PLUS WIFI",
-					&board_info_tuf_gaming_x670e_plus_wifi),
+					&board_info_tuf_gaming_x670e_plus),
 	{},
 };
 
