@@ -550,9 +550,7 @@ static const struct ec_board_info board_info_pro_art_x870E_creator_wifi = {
 
 static const struct ec_board_info board_info_pro_ws_trx50_sage_wifi = {
 	/* Board also has a nct6798 */
-	.sensors = SENSOR_TEMP_CPU_PACKAGE | SENSOR_TEMP_T_SENSOR |
-		SENSOR_FAN_CPU_OPT | SENSOR_FAN_USB4 | SENSOR_FAN_M2 |
-		SENSOR_FAN_VRME_HS | SENSOR_FAN_VRMW_HS,
+	.sensors = SENSOR_TEMP_T_SENSOR | SENSOR_FAN_VRME_HS | SENSOR_FAN_VRMW_HS,
 	.mutex_path = ASUS_HW_ACCESS_MUTEX_RMTW_ASMX,
 	.family = family_amd_trx_50,
 };
