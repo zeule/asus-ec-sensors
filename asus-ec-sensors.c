@@ -671,6 +671,19 @@ static const struct ec_board_info board_info_strix_x670e_e_gaming_wifi = {
 	.family = family_amd_600_series,
 };
 
+static const struct ec_board_info board_info_strix_x670e_f_gaming_wifi = {
+	.sensors = 	SENSOR_TEMP_CPU |
+				SENSOR_TEMP_CPU_PACKAGE |
+				SENSOR_TEMP_MB |
+				SENSOR_TEMP_VRM |
+				SENSOR_FAN_CPU_OPT |
+				SENSOR_TEMP_WATER_IN |
+				SENSOR_TEMP_WATER_OUT,
+	.mutex_path = ASUS_HW_ACCESS_MUTEX_RMTW_ASMX,
+	.family = family_amd_600_series,
+};
+
+
 static const struct ec_board_info board_info_strix_x670e_i_gaming_wifi = {
 	.sensors = SENSOR_TEMP_CPU | SENSOR_TEMP_CPU_PACKAGE |
 			SENSOR_TEMP_MB | SENSOR_TEMP_VRM,
@@ -854,6 +867,8 @@ static const struct dmi_system_id dmi_table[] = {
 					&board_info_strix_x570_i_gaming),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ROG STRIX X670E-E GAMING WIFI",
 					&board_info_strix_x670e_e_gaming_wifi),
+	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ROG STRIX X670E-F GAMING WIFI",
+					&board_info_strix_x670e_f_gaming_wifi),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ROG STRIX X670E-I GAMING WIFI",
 					&board_info_strix_x670e_i_gaming_wifi),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ROG STRIX X870-F GAMING WIFI",
