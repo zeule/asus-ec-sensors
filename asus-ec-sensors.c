@@ -459,7 +459,8 @@ static const struct ec_board_info board_info_crosshair_viii_impact = {
 static const struct ec_board_info board_info_crosshair_x670e_extreme = {
 	.sensors = SENSOR_TEMP_CPU | SENSOR_TEMP_CPU_PACKAGE |
 		SENSOR_TEMP_MB | SENSOR_TEMP_VRM |
-		SENSOR_TEMP_T_SENSOR,
+		SENSOR_TEMP_T_SENSOR | SENSOR_TEMP_WATER_IN | 
+		SENSOR_TEMP_WATER_OUT,
 	.mutex_path = ACPI_GLOBAL_LOCK_PSEUDO_PATH,
 	.family = family_amd_600_series,
 };
