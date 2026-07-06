@@ -535,12 +535,6 @@ static const struct ec_board_info board_info_maximus_z690_formula = {
 	.family = family_intel_600_series,
 };
 
-static const struct ec_board_info board_info_proart_z690_creator_wifi = {
-	.sensors = SENSOR_TEMP_T_SENSOR | SENSOR_TEMP_VRM |
-		SENSOR_FAN_CPU_OPT,
-	.mutex_path = ASUS_HW_ACCESS_MUTEX_RMTW_ASMX,
-	.family = family_intel_600_series,
-};
 
 static const struct ec_board_info board_info_maximus_z790_extreme = {
 	.sensors = SENSOR_TEMP_T_SENSOR | SENSOR_TEMP_VRM |
@@ -618,6 +612,13 @@ static const struct ec_board_info board_info_pro_art_x870E_creator_wifi = {
 		SENSOR_TEMP_T_SENSOR | SENSOR_FAN_CPU_OPT,
 	.mutex_path = ASUS_HW_ACCESS_MUTEX_SB_PCI0_SBRG_SIO1_MUT0,
 	.family = family_amd_800_series,
+};
+
+static const struct ec_board_info board_info_pro_art_z690_creator_wifi = {
+	.sensors = SENSOR_TEMP_T_SENSOR | SENSOR_TEMP_VRM |
+		SENSOR_FAN_CPU_OPT,
+	.mutex_path = ASUS_HW_ACCESS_MUTEX_SB_PC00_LPCB_SIO1_MUT0,
+	.family = family_intel_600_series,
 };
 
 static const struct ec_board_info board_info_pro_ws_trx50_sage_wifi = {
@@ -890,7 +891,7 @@ static const struct dmi_system_id dmi_table[] = {
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ProArt X870E-CREATOR WIFI",
 					&board_info_pro_art_x870E_creator_wifi),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("ProArt Z690-CREATOR WIFI",
-					&board_info_proart_z690_creator_wifi),
+					&board_info_pro_art_z690_creator_wifi),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("Pro WS TRX50-SAGE WIFI",
 					&board_info_pro_ws_trx50_sage_wifi),
 	DMI_EXACT_MATCH_ASUS_BOARD_NAME("Pro WS TRX50-SAGE WIFI A",
