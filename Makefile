@@ -15,6 +15,7 @@ KBDIR = $(KDIR)/build
 
 MAKEFLAGS += --no-print-directory
 MOD_SUBDIR = extra/drivers/hwmon
+DRIVER_NAME = asus-ec-sensors
 
 ifneq (,$(wildcard .git/*))
 	PACKAGE_VERSION := $(shell git describe --long --always)
@@ -42,9 +43,12 @@ all: modules
 modules modules_install clean:
 	@$(MAKE) EXTRA_CFLAGS="$(ASUS_EC_SENSORS_CFLAGS)" \
 		INSTALL_MOD_DIR=$(MOD_SUBDIR) -C $(KBDIR) M=$(CURDIR) $@
+sign: modules
+	$(KBDIR)/scripts/sign-file sha512 \
+		$(KBDIR)/certs/signing_key.pem $(KBDIR)/certs/signing_key.x509 \
+		$(DRIVER_NAME).ko
 
 # DKMS
-DRIVER_NAME = asus-ec-sensors
 
 dkms_configure:
 	@sed -e 's/@PACKAGE_VERSION@/$(PACKAGE_VERSION)/' \
