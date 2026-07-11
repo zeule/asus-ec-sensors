@@ -72,6 +72,13 @@ static char *mutex_path_override;
 /* Moniker for the ACPI global lock (':' is not allowed in ASL identifiers) */
 #define ACPI_GLOBAL_LOCK_PSEUDO_PATH	":GLOBAL_LOCK"
 
+/*
+ * The values for temperature sensor readings without physical sensors connected.
+ * The value varies across generations and is seemingly defined by the EC chip
+ * used in the given board.
+ */
+static s32 temperature_blank_values[] = {-62, -60, -40};
+
 typedef union {
 	u32 value;
 	struct {
@@ -1330,6 +1337,17 @@ static int get_cached_value_or_update(const struct device *dev,
 	return 0;
 }
 
+static bool is_blank_temperature_value(s32 value)
+{
+	size_t i;
+
+	for (i = 0; i < ARRAY_SIZE(temperature_blank_values); ++i) {
+		if (value == temperature_blank_values[i])
+			return true;
+	}
+	return false;
+}
+
 /*
  * Now follow the functions that implement the hwmon interface
  */
@@ -1337,6 +1355,7 @@ static int get_cached_value_or_update(const struct device *dev,
 static int asus_ec_hwmon_read(struct device *dev, enum hwmon_sensor_types type,
 			      u32 attr, int channel, long *val)
 {
+	const struct ec_sensor_info *sensor_info;
 	int ret;
 	s32 value = 0;
 
@@ -1349,8 +1368,12 @@ static int asus_ec_hwmon_read(struct device *dev, enum hwmon_sensor_types type,
 
 	ret = get_cached_value_or_update(dev, sidx, state, &value);
 	if (!ret) {
-		*val = scale_sensor_value(value,
-					  get_sensor_info(state, sidx)->type);
+		sensor_info = get_sensor_info(state, sidx);
+		if (sensor_info->type == hwmon_temp &&
+		    is_blank_temperature_value(value)) {
+			return -ENODATA;
+		}
+		*val = scale_sensor_value(value, sensor_info->type);
 	}
 
 	return ret;
