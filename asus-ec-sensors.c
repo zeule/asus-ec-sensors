@@ -402,11 +402,6 @@ static const struct ec_sensor_info sensors_family_intel_400[] = {
 	[ec_sensor_fan_vrm_hs] = EC_SENSOR("VRM HS", hwmon_fan, 2, 0x00, 0xb2),
 };
 
-/*
- * Intel 500-series registers confirmed on PRIME Z590-A. The usual chipset
- * byte (0x3a) and CPU byte (0x3b) are not exposed: 0x3a does not move under
- * CPU load, and 0x3b does not follow package temperature.
- */
 static const struct ec_sensor_info sensors_family_intel_500[] = {
 	[ec_sensor_temp_mb] =
 		EC_SENSOR("Motherboard", hwmon_temp, 1, 0x00, 0x3c),
